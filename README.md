@@ -7,7 +7,7 @@
 ## 鸣谢
 
 本项目基于 [pot](https://github.com/pot-app/pot-desktop)（派了个萌的翻译器）二次开发，感谢原作者 [pot-app](https://github.com/pot-app) 及所有贡献者的出色工作。
-
+感谢WorkBuddy的辛勤付出。
 原项目采用 GPL-3.0 许可证，本项目继承同一许可证。
 
 ## 修改内容
