@@ -1,0 +1,199 @@
+.pot-markdown-body {
+    line-height: 1.6;
+    word-break: break-word;
+    overflow-x: auto;
+}
+
+.pot-markdown-body > *:first-child {
+    margin-top: 0;
+}
+
+.pot-markdown-body > *:last-child {
+    margin-bottom: 0;
+}
+
+.pot-markdown-body h1,
+.pot-markdown-body h2,
+.pot-markdown-body h3,
+.pot-markdown-body h4,
+.pot-markdown-body h5,
+.pot-markdown-body h6 {
+    font-weight: 600;
+    margin: 0.6em 0 0.3em 0;
+    line-height: 1.3;
+}
+
+.pot-markdown-body h1 {
+    font-size: 1.35em;
+}
+.pot-markdown-body h2 {
+    font-size: 1.25em;
+}
+.pot-markdown-body h3 {
+    font-size: 1.15em;
+}
+.pot-markdown-body h4,
+.pot-markdown-body h5,
+.pot-markdown-body h6 {
+    font-size: 1em;
+}
+
+.pot-markdown-body p {
+    margin: 0.4em 0;
+}
+
+.pot-markdown-body ul,
+.pot-markdown-body ol {
+    margin: 0.4em 0;
+    padding-left: 1.6em;
+}
+
+.pot-markdown-body ul {
+    list-style: disc;
+}
+
+.pot-markdown-body ol {
+    list-style: decimal;
+}
+
+.pot-markdown-body li {
+    margin: 0.15em 0;
+}
+
+.pot-markdown-body blockquote {
+    margin: 0.5em 0;
+    padding: 0.2em 0.9em;
+    border-left: 3px solid hsl(var(--nextui-primary) / 0.6, #3578e5);
+    opacity: 0.9;
+}
+
+.pot-markdown-body code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: rgba(128, 128, 128, 0.18);
+    border-radius: 4px;
+    padding: 0.15em 0.35em;
+    font-size: 0.9em;
+}
+
+.pot-markdown-body pre {
+    margin: 0.5em 0;
+    padding: 0.7em 0.9em;
+    border-radius: 8px;
+    overflow-x: auto;
+    background: #f6f8fa;
+}
+
+.pot-markdown-body pre code {
+    background: transparent;
+    padding: 0;
+    font-size: 0.88em;
+    line-height: 1.5;
+}
+
+.dark .pot-markdown-body pre {
+    background: #161a1d;
+}
+
+.pot-markdown-body table {
+    border-collapse: collapse;
+    margin: 0.5em 0;
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.pot-markdown-body th,
+.pot-markdown-body td {
+    border: 1px solid rgba(128, 128, 128, 0.35);
+    padding: 0.3em 0.7em;
+    text-align: left;
+}
+
+.pot-markdown-body th {
+    font-weight: 600;
+    background: rgba(128, 128, 128, 0.12);
+}
+
+.pot-markdown-body a {
+    text-decoration: underline;
+}
+
+.pot-markdown-body img {
+    max-width: 100%;
+}
+
+.pot-markdown-body hr {
+    border: none;
+    border-top: 1px solid rgba(128, 128, 128, 0.35);
+    margin: 0.7em 0;
+}
+
+.pot-markdown-body .katex-display {
+    margin: 0.5em 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.pot-markdown-body .katex {
+    font-size: 1.05em;
+}
+
+/* minimal highlight.js token theme, light */
+.pot-markdown-body .hljs-comment,
+.pot-markdown-body .hljs-quote {
+    color: #6a737d;
+}
+.pot-markdown-body .hljs-keyword,
+.pot-markdown-body .hljs-selector-tag,
+.pot-markdown-body .hljs-built_in {
+    color: #d73a49;
+}
+.pot-markdown-body .hljs-string,
+.pot-markdown-body .hljs-attr,
+.pot-markdown-body .hljs-template-string {
+    color: #032f62;
+}
+.pot-markdown-body .hljs-number,
+.pot-markdown-body .hljs-literal {
+    color: #005cc5;
+}
+.pot-markdown-body .hljs-title,
+.pot-markdown-body .hljs-function .hljs-title,
+.pot-markdown-body .hljs-title.function_ {
+    color: #6f42c1;
+}
+.pot-markdown-body .hljs-type,
+.pot-markdown-body .hljs-class .hljs-title,
+.pot-markdown-body .hljs-title.class_ {
+    color: #22863a;
+}
+
+/* dark overrides */
+.dark .pot-markdown-body .hljs-comment,
+.dark .pot-markdown-body .hljs-quote {
+    color: #8b949e;
+}
+.dark .pot-markdown-body .hljs-keyword,
+.dark .pot-markdown-body .hljs-selector-tag,
+.dark .pot-markdown-body .hljs-built_in {
+    color: #ff7b72;
+}
+.dark .pot-markdown-body .hljs-string,
+.dark .pot-markdown-body .hljs-attr,
+.dark .pot-markdown-body .hljs-template-string {
+    color: #a5d6ff;
+}
+.dark .pot-markdown-body .hljs-number,
+.dark .pot-markdown-body .hljs-literal {
+    color: #79c0ff;
+}
+.dark .pot-markdown-body .hljs-title,
+.dark .pot-markdown-body .hljs-function .hljs-title,
+.dark .pot-markdown-body .hljs-title.function_ {
+    color: #d2a8ff;
+}
+.dark .pot-markdown-body .hljs-type,
+.dark .pot-markdown-body .hljs-class .hljs-title,
+.dark .pot-markdown-body .hljs-title.class_ {
+    color: #7ee787;
+}
