@@ -8,7 +8,7 @@
     },
     "package": {
         "productName": "pot-MD",
-        "version": "3.0.7-MD.4"
+        "version": "3.0.7-MD.5"
     },
     "tauri": {
         "allowlist": {

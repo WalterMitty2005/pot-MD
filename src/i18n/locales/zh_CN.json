@@ -55,14 +55,14 @@
                 "app_font": "字体",
                 "app_fallback_font": "后备字体",
                 "font_size": {
-                    "title": "字体大小",
                     "10": "极小 (10px)",
                     "12": "特小 (12px)",
                     "14": "小 (14px)",
                     "16": "标准 (16px)",
                     "18": "大 (18px)",
                     "20": "特大 (20px)",
-                    "24": "超大 (24px)"
+                    "24": "超大 (24px)",
+                    "title": "字体大小"
                 },
                 "default_font": "默认",
                 "theme": {
@@ -109,14 +109,14 @@
                 "remember_language": "记住目标语言",
                 "markdown_render": "渲染 Markdown 格式",
                 "font_size": {
-                    "title": "字体大小",
                     "10": "极小 (10px)",
                     "12": "特小 (12px)",
                     "14": "小 (14px)",
                     "16": "标准 (16px)",
                     "18": "大 (18px)",
                     "20": "特大 (20px)",
-                    "24": "超大 (24px)"
+                    "24": "超大 (24px)",
+                    "title": "字体大小"
                 },
                 "window_position": "窗口位置",
                 "mouse": "跟随鼠标",
@@ -215,6 +215,10 @@
                 "qq_group": "QQ 群",
                 "telegram": "Telegram",
                 "discussion": "Github 讨论"
+            },
+            "selection_popup": {
+                "label": "划词弹窗",
+                "title": "划词弹窗"
             }
         },
         "updater": {
@@ -474,6 +478,20 @@
             "copy_text": "复制",
             "delete_newline": "删除换行",
             "delete_space": "删除空格"
+        },
+        "popup": {
+            "translate": "翻译",
+            "copy": "复制",
+            "enable": "启用划词弹窗",
+            "enabled_success": "划词弹窗已启用",
+            "list_mode": "名单模式",
+            "whitelist": "白名单",
+            "blacklist": "黑名单",
+            "whitelist_desc": "仅在下列应用中出现弹窗",
+            "blacklist_desc": "在除下列应用外的所有应用中出现弹窗",
+            "process_name_placeholder": "进程名（如 chrome.exe）",
+            "current_process": "当前前台应用",
+            "add_current": "添加当前应用"
         }
     }
 }

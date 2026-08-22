@@ -8,6 +8,7 @@ import History from '../pages/History';
 import Hotkey from '../pages/Hotkey';
 import Backup from '../pages/Backup';
 import About from '../pages/About';
+import SelectionPopup from '../pages/SelectionPopup';
 
 const routes = [
     {
@@ -25,6 +26,10 @@ const routes = [
     {
         path: '/hotkey',
         element: <Hotkey />,
+    },
+    {
+        path: '/selection_popup',
+        element: <SelectionPopup />,
     },
     {
         path: '/service',

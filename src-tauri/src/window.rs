@@ -122,6 +122,23 @@ pub fn config_window() {
     window.center().unwrap();
 }
 
+pub fn init_popup_window() {
+    // Create the popup WebView once at startup, hidden. This avoids the
+    // Chromium cold-start cost on the first selection (the "first popup is
+    // slow" complaint) — the window already exists, so showing it is instant.
+    // The frontend mounts (runs its on-mount handler) but stays hidden until
+    // a selection emits "popup_text". Safe to create at startup: this runs on
+    // the main thread.
+    if APP.get().is_none() {
+        return;
+    }
+    let app_handle = APP.get().unwrap();
+    if app_handle.get_window("popup").is_some() {
+        return;
+    }
+    let _ = popup_window(String::new());
+}
+
 fn translate_window() -> Window {
     use mouse_position::mouse_position::{Mouse, Position};
     // Mouse physical position
@@ -221,6 +238,102 @@ fn translate_window() -> Window {
     }
 
     window
+}
+
+pub fn popup_window(text: String) {
+    use mouse_position::mouse_position::{Mouse, Position};
+
+    let mut mouse_position = match Mouse::get_mouse_position() {
+        Mouse::Position { x, y } => Position { x, y },
+        Mouse::Error => {
+            warn!("Mouse position not found for popup");
+            Position { x: 0, y: 0 }
+        }
+    };
+
+    let app_handle = APP.get().unwrap();
+    // If popup window exists, emit text and reposition
+    if let Some(window) = app_handle.get_window("popup") {
+        // current_monitor() can return None for a window in an odd state
+        // (e.g. just created / DPI transitions). Don't panic on it — fall
+        // through and recreate the window instead.
+        if let Ok(Some(monitor)) = window.current_monitor() {
+            let dpi = monitor.scale_factor();
+            let (w, h) = (130.0 * dpi, 40.0 * dpi);
+            clamp_popup_position(&mut mouse_position, &monitor, w, h);
+            let _ = window.set_position(tauri::PhysicalPosition::new(
+                mouse_position.x,
+                mouse_position.y,
+            ));
+            let _ = window.emit("popup_text", text);
+            return;
+        }
+    }
+
+    // Create new popup window
+    let current_monitor = get_current_monitor(mouse_position.x, mouse_position.y);
+    let position = current_monitor.position();
+    let builder = tauri::WindowBuilder::new(
+        app_handle,
+        "popup",
+        tauri::WindowUrl::App("index.html".into()),
+    )
+    .position(position.x.into(), position.y.into())
+    .additional_browser_args("--disable-web-security")
+    .focused(false)
+    .title("Popup")
+    .visible(false)
+    .transparent(true)
+    .decorations(false)
+    .always_on_top(true)
+    .skip_taskbar(true);
+
+    let window = match builder.build() {
+        Ok(w) => w,
+        Err(e) => {
+            warn!("Failed to build popup window: {:?}", e);
+            return;
+        }
+    };
+
+    if let Ok(Some(monitor)) = window.current_monitor() {
+        let dpi = monitor.scale_factor();
+        let w = 130.0 * dpi;
+        let h = 40.0 * dpi;
+        let _ = window.set_size(tauri::PhysicalSize::new(w, h));
+
+        clamp_popup_position(&mut mouse_position, &monitor, w, h);
+        let _ = window.set_position(tauri::PhysicalPosition::new(
+            mouse_position.x,
+            mouse_position.y,
+        ));
+
+        #[cfg(not(target_os = "linux"))]
+        set_shadow(&window, false).unwrap_or_default();
+
+        let _ = window.emit("popup_text", text);
+    }
+}
+
+fn clamp_popup_position(
+    mouse: &mut mouse_position::mouse_position::Position,
+    monitor: &tauri::Monitor,
+    w: f64,
+    h: f64,
+) {
+    let size = monitor.size();
+    let pos = monitor.position();
+    let max_x = pos.x + size.width as i32 - w as i32;
+    let max_y = pos.y + size.height as i32 - h as i32;
+    // Offset 8px from cursor
+    mouse.x += 8;
+    mouse.y += 8;
+    if mouse.x > max_x {
+        mouse.x = max_x;
+    }
+    if mouse.y > max_y {
+        mouse.y = max_y;
+    }
 }
 
 pub fn selection_translate() {

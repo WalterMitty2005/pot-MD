@@ -55,14 +55,14 @@
                 "app_font": "Font",
                 "app_fallback_font": "Fallback Font",
                 "font_size": {
-                    "title": "Font Size",
                     "10": "Extra Small (10px)",
                     "12": "Very Small (12px)",
                     "14": "Small (14px)",
                     "16": "Standard (16px)",
                     "18": "Large (18px)",
                     "20": "Very Large (20px)",
-                    "24": "Extra Large (24px)"
+                    "24": "Extra Large (24px)",
+                    "title": "Font Size"
                 },
                 "default_font": "Default",
                 "theme": {
@@ -109,14 +109,14 @@
                 "remember_language": "Remember Target Language",
                 "markdown_render": "Render Markdown",
                 "font_size": {
-                    "title": "Font Size",
                     "10": "Very Very Small (10px)",
                     "12": "Very Small (12px)",
                     "14": "Small (14px)",
                     "16": "Standard (16px)",
                     "18": "Large (18px)",
                     "20": "Very Large (20px)",
-                    "24": "Very Very Large (24px)"
+                    "24": "Very Very Large (24px)",
+                    "title": "Font Size"
                 },
                 "window_position": "Window Position",
                 "mouse": "Follow the Mouse",
@@ -215,6 +215,10 @@
                 "qq_group": "QQ Group",
                 "telegram": "Telegram",
                 "discussion": "Github Discussion"
+            },
+            "selection_popup": {
+                "label": "Selection Popup",
+                "title": "Selection Popup"
             }
         },
         "updater": {
@@ -474,6 +478,20 @@
             "copy_text": "Copy",
             "delete_newline": "Delete Newline",
             "delete_space": "Delete Space"
+        },
+        "popup": {
+            "translate": "Translate",
+            "copy": "Copy",
+            "enable": "Enable selection popup",
+            "enabled_success": "Selection popup enabled",
+            "list_mode": "List Mode",
+            "whitelist": "Whitelist",
+            "blacklist": "Blacklist",
+            "whitelist_desc": "Popup only appears in the applications listed below",
+            "blacklist_desc": "Popup appears everywhere except the applications listed below",
+            "process_name_placeholder": "Process name (e.g. chrome.exe)",
+            "current_process": "Current foreground application",
+            "add_current": "Add current"
         }
     }
 }

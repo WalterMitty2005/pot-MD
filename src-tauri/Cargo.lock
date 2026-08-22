@@ -4658,6 +4658,7 @@ dependencies = [
  "arboard",
  "base64 0.22.1",
  "dirs 5.0.1",
+ "enigo",
  "font-kit",
  "image 0.25.4",
  "lingua",

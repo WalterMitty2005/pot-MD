@@ -23,6 +23,29 @@ pub fn init_config(app: &mut tauri::App) {
         }
     }
     app.manage(StoreWrapper(Mutex::new(store)));
+
+    // Ensure the global hotkeys have sane defaults on first run (and back-fill
+    // any that are missing for upgrading users) so the popup's "translate"
+    // button — which simulates the configured selection-translate hotkey via
+    // SendInput — always has a key to press. Without this the hotkey config is
+    // empty by default and nothing works until the user opens settings.
+    {
+        let state = app.state::<StoreWrapper>();
+        let mut store = state.0.lock().unwrap();
+        let default_hotkeys: &[(&str, &str)] = &[
+            ("hotkey_selection_translate", "Alt+A"),
+            ("hotkey_input_translate", "Alt+D"),
+            ("hotkey_ocr_recognize", "Alt+Q"),
+            ("hotkey_ocr_translate", "Alt+S"),
+        ];
+        for (k, v) in default_hotkeys.iter() {
+            if store.get(k).is_none() {
+                let _ = store.insert(k.to_string(), json!(v));
+            }
+        }
+        let _ = store.save();
+    }
+
     let _ = check_service_available();
 }
 

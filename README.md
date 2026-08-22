@@ -7,7 +7,7 @@
 ## 鸣谢
 
 本项目基于 [pot](https://github.com/pot-app/pot-desktop)（派了个萌的翻译器）二次开发，感谢原作者 [pot-app](https://github.com/pot-app) 及所有贡献者的出色工作。
-感谢WorkBuddy的辛勤付出。
+
 原项目采用 GPL-3.0 许可证，本项目继承同一许可证。
 
 ## 修改内容
@@ -19,14 +19,23 @@
 | 1 | 翻译结果 Markdown 渲染（核心功能）。翻译结果以 Markdown 格式渲染，支持标题、列表、代码块、表格等；数学公式通过 KaTeX 渲染，行内公式 `$...$`，块级公式 `$$...$$`。提供全局开关、启发式自动检测、单卡片手动切换三层控制。 |
 | 2 | 为适配 Markdown 渲染功能，将默认提示词替换，要求对于专业术语后用括号标注原文、输出结果用 Markdown 格式。涉及 OpenAI、Ollama、Gemini、ChatGLM 共 6 处默认 system prompt。 |
 | 3 | 新增服务级「自动翻译」开关。在服务设置列表中，每个翻译服务实例旁新增一个开关（琥珀色电源图标），控制该服务是否在翻译窗口弹出时自动调用翻译。关闭后服务卡片仍显示，需手动点击「点击翻译」按钮触发。原有的显示开关保持不变。 |
-| 4 | 修改应用名为 pot-MD 和版本号（3.0.7-MD.4），使与原版区分。 |
+| 4 | 修改应用名为 pot-MD 和版本号（3.0.7-MD.5），使与原版区分。 |
+| 5 | **划词弹窗（Selection Popup）**：选中文本后弹出小巧翻译卡片。首次启动自动写入默认快捷键（划词翻译 Alt+A / 输入翻译 Alt+D / 文字识别 Alt+Q / 截图 Alt+S）；弹窗采用 CSS 大圆角 + 磨砂模糊 + 白色描边卡片形态（无黑边）；鼠标离弹窗越近越清晰、越远离越透明，超出阈值自动隐藏；弹窗「翻译」按钮模拟用户绑定快捷键，与手动按快捷键完全等价。 |
 
 ## 下载安装
 
-前往 [Releases](https://github.com/WalterMitty2005/pot-MD/releases) 页面下载最新版本。
+### 最新版本（3.0.7-MD.5）
 
-- Windows: `pot-MD_3.0.7-MD.4_x64-setup.exe`（NSIS 安装包）
-- 绿色版: `pot-MD_3.0.7-MD.4_x64.exe`（免安装，直接运行）
+> 划词弹窗优化：默认快捷键、CSS 圆角磨砂卡片、鼠标渐远渐透明。
+
+- Windows 安装包: [`pot-MD_3.0.7-MD.5_x64-setup.exe`](https://github.com/WalterMitty2005/pot-MD/releases/download/v3.0.7-MD.5/pot-MD_3.0.7-MD.5_x64-setup.exe)（NSIS 安装包）
+- 绿色版: [`pot-MD_3.0.7-MD.5_x64.exe`](https://github.com/WalterMitty2005/pot-MD/releases/download/v3.0.7-MD.5/pot-MD_3.0.7-MD.5_x64.exe)（免安装，直接运行）
+
+### 历史版本（3.0.7-MD.4）
+
+- 前往 [GitHub Releases](https://github.com/WalterMitty2005/pot-MD/releases) 页面下载 MD.4 版本（保持原有包不变）。
+
+> 完整变更记录见 [CHANGELOG](./CHANGELOG)。
 
 ## 技术细节
 

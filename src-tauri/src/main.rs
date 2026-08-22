@@ -8,6 +8,8 @@ mod config;
 mod error;
 mod hotkey;
 mod lang_detect;
+mod popup;
+mod process;
 mod screenshot;
 mod server;
 mod system_ocr;
@@ -23,6 +25,7 @@ use hotkey::*;
 use lang_detect::*;
 use log::info;
 use once_cell::sync::OnceCell;
+use popup::*;
 use screenshot::screenshot;
 use server::*;
 use std::sync::Mutex;
@@ -125,6 +128,20 @@ fn main() {
                 clipboard_monitor.to_string(),
             )));
             start_clipboard_monitor(app.handle());
+            // Start popup monitor if enabled
+            let popup_enabled = match get("popup_enabled") {
+                Some(v) => v.as_bool().unwrap_or(false),
+                None => {
+                    set("popup_enabled", false);
+                    false
+                }
+            };
+            if popup_enabled {
+                start_popup_monitor();
+            }
+            // Pre-create the hidden popup WebView at startup so the first
+            // selection popup is instant (avoids Chromium cold-start).
+            crate::window::init_popup_window();
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -147,7 +164,11 @@ fn main() {
             local,
             install_plugin,
             font_list,
-            aliyun
+            aliyun,
+            popup_get_foreground_process,
+            popup_set_enabled,
+            popup_get_text,
+            popup_translate
         ])
         .on_system_tray_event(tray_event_handler)
         .build(tauri::generate_context!())

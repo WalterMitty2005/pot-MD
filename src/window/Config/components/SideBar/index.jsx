@@ -8,6 +8,7 @@ import { MdKeyboardAlt } from 'react-icons/md';
 import { MdExtension } from 'react-icons/md';
 import { AiFillCloud } from 'react-icons/ai';
 import { FaHistory } from 'react-icons/fa';
+import { MdOutlineAdsClick } from 'react-icons/md';
 import { Button } from '@nextui-org/react';
 import React from 'react';
 
@@ -69,6 +70,18 @@ export default function SideBar() {
                 startContent={<MdKeyboardAlt className='text-[24px]' />}
             >
                 <div className='w-full'>{t('config.hotkey.label')}</div>
+            </Button>
+            <Button
+                fullWidth
+                size='lg'
+                variant={setStyle('/selection_popup')}
+                className='mb-[5px]'
+                onPress={() => {
+                    navigate('/selection_popup');
+                }}
+                startContent={<MdOutlineAdsClick className='text-[24px]' />}
+            >
+                <div className='w-full'>{t('config.selection_popup.label')}</div>
             </Button>
             <Button
                 fullWidth
