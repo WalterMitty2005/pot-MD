@@ -142,6 +142,11 @@ fn main() {
             // Pre-create the hidden popup WebView at startup so the first
             // selection popup is instant (avoids Chromium cold-start).
             crate::window::init_popup_window();
+            // Keep the hook thread's popup-visibility cache in sync with
+            // frontend show/hide (see popup.rs). Cheap: one AtomicBool write
+            // per show/hide, saves an is_visible() IPC call on every mouse
+            // move while the popup is hidden.
+            init_popup_visibility(&app.handle());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

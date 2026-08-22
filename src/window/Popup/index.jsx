@@ -1,7 +1,7 @@
 import { appWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/tauri';
 import { writeText } from '@tauri-apps/api/clipboard';
-import { listen } from '@tauri-apps/api/event';
+import { emit, listen } from '@tauri-apps/api/event';
 import { useTranslation } from 'react-i18next';
 import { Button, Tooltip } from '@nextui-org/react';
 import { PiTranslateFill } from 'react-icons/pi';
@@ -14,12 +14,25 @@ export default function Popup() {
     const [popupOpacity, setPopupOpacity] = useState(1);
     const timerRef = useRef(null);
 
+    // Keep the Rust hook thread's visibility cache in sync. While the popup is
+    // hidden, the global mouse hook skips all window IPC on every mouse move,
+    // which keeps dragging other windows as smooth as the no-popup build.
+    async function showPopup() {
+        await appWindow.show();
+        emit('popup_visible', true);
+    }
+
+    async function hidePopup() {
+        await appWindow.hide();
+        emit('popup_visible', false);
+    }
+
     function armAutoClose() {
         if (timerRef.current) {
             clearTimeout(timerRef.current);
         }
         timerRef.current = setTimeout(async () => {
-            await appWindow.hide();
+            await hidePopup();
         }, 8000);
     }
 
@@ -35,7 +48,7 @@ export default function Popup() {
                     // Reset opacity in case the popup was faded out by the
                     // mouse-move-away logic on the Rust side.
                     setPopupOpacity(1);
-                    await appWindow.show();
+                    await showPopup();
                     armAutoClose();
                 }
             } catch (e) {
@@ -46,7 +59,7 @@ export default function Popup() {
         const unlisten = listen('popup_text', async (event) => {
             setText(event.payload);
             setPopupOpacity(1);
-            await appWindow.show();
+            await showPopup();
             armAutoClose();
         });
 
@@ -62,7 +75,7 @@ export default function Popup() {
         // side also dismisses on mouse-move-away, but this covers clicks that
         // don't move the cursor.
         const unlistenBlur = listen('tauri://blur', async () => {
-            await appWindow.hide();
+            await hidePopup();
         });
 
         return () => {
@@ -83,7 +96,7 @@ export default function Popup() {
         // (e.g. Ctrl+1). Rust refocuses the source app and re-reads the
         // selection, then the frontend closes this popup.
         await invoke('popup_translate');
-        await appWindow.hide();
+        await hidePopup();
     }
 
     async function handleCopy() {
@@ -91,7 +104,7 @@ export default function Popup() {
             clearTimeout(timerRef.current);
         }
         await writeText(text);
-        await appWindow.hide();
+        await hidePopup();
     }
 
     return (

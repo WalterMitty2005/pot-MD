@@ -26,6 +26,13 @@ mod win_impl {
     static POPUP_RUNNING: AtomicBool = AtomicBool::new(false);
     static POPUP_PENDING: AtomicBool = AtomicBool::new(false);
     static HOOK_THREAD_ID: AtomicU32 = AtomicU32::new(0);
+    // Popup visibility cache: written on every show/hide (frontend emits
+    // "popup_visible", Rust stores on its own hide calls), read by the hook
+    // thread on every mouse move. Lets the hook short-circuit with zero
+    // Tauri/WebView2 IPC when the popup is hidden. This fixes the first-move
+    // jank: previously every mouse move did a synchronous is_visible() call
+    // from the hook thread, and the first one had to warm up the IPC path.
+    static POPUP_VISIBLE: AtomicBool = AtomicBool::new(false);
 
     // Ensures POPUP_PENDING is cleared when a selection attempt finishes,
     // even if handle_selection panics. Without this, a single failure would
@@ -145,6 +152,13 @@ mod win_impl {
     // POPUP_VISIBLE_MARGIN it's fully opaque; beyond POPUP_FADE_MARGIN it's
     // hidden; in between opacity interpolates linearly.
     fn update_popup_opacity(x: i32, y: i32) {
+        // Fast path: popup hidden, so do nothing at all. No window lookup,
+        // no cross-thread Tauri call, no IPC. This runs on the global mouse
+        // hook thread, so keeping it this cheap is what keeps the system
+        // mouse feel identical to the no-popup build while the popup is away.
+        if !POPUP_VISIBLE.load(Ordering::SeqCst) {
+            return;
+        }
         let app_handle = match crate::APP.get() {
             Some(h) => h,
             None => return,
@@ -153,11 +167,6 @@ mod win_impl {
             Some(w) => w,
             None => return,
         };
-        // Only act on a visible popup (avoids touching it while it's hidden or
-        // during text selection, when it hasn't been shown yet).
-        if !window.is_visible().unwrap_or(false) {
-            return;
-        }
         let pos = match window.outer_position() {
             Ok(p) => p,
             Err(_) => return,
@@ -190,6 +199,7 @@ mod win_impl {
             // window-level setOpacity, so the frontend applies the value to the
             // card via CSS and we hide from Rust.
             let _ = window.emit("popup_opacity", 0.0f64);
+            POPUP_VISIBLE.store(false, Ordering::SeqCst);
             let _ = window.hide();
             return;
         }
@@ -337,6 +347,21 @@ mod win_impl {
         }
     }
 
+    // Listen for frontend-driven show/hide so the hook thread's visibility
+    // cache stays in sync when the WebView hides itself (translate/copy
+    // buttons, blur, auto-close). The hook thread only ever reads the cache,
+    // so this plain AtomicBool write is safe from any thread.
+    pub fn init_popup_visibility(app: &tauri::AppHandle) {
+        let app = app.clone();
+        let _ = app.listen_global("popup_visible", move |event| {
+            if let Some(payload) = event.payload() {
+                if let Ok(v) = serde_json::from_str::<bool>(payload) {
+                    POPUP_VISIBLE.store(v, Ordering::SeqCst);
+                }
+            }
+        });
+    }
+
     #[tauri::command]
     pub fn popup_get_foreground_process() -> String {
         get_foreground_process_name().unwrap_or_default()
@@ -369,6 +394,7 @@ mod win_impl {
         // on the MAIN thread — the exact same path as a manual keypress, so no
         // window-creation deadlock and the text read is the real selection.
         if let Some(w) = crate::APP.get().map(|h| h.get_window("popup")).flatten() {
+            POPUP_VISIBLE.store(false, Ordering::SeqCst);
             let _ = w.hide();
             // Give the OS a moment to return focus to the source app before the
             // synthesized keypress triggers selection_translate (which reads the
@@ -511,8 +537,8 @@ pub static POPUP_TEXT: std::sync::Mutex<String> = std::sync::Mutex::new(String::
 
 #[cfg(target_os = "windows")]
 pub use win_impl::{
-    popup_get_foreground_process, popup_set_enabled, popup_translate, start_popup_monitor,
-    stop_popup_monitor,
+    init_popup_visibility, popup_get_foreground_process, popup_set_enabled, popup_translate,
+    start_popup_monitor, stop_popup_monitor,
 };
 
 // Fetch the current popup text (called by Popup window on mount to avoid
@@ -522,6 +548,8 @@ pub fn popup_get_text() -> String {
     POPUP_TEXT.lock().unwrap().clone()
 }
 
+#[cfg(not(target_os = "windows"))]
+pub fn init_popup_visibility(_app: &tauri::AppHandle) {}
 #[cfg(not(target_os = "windows"))]
 pub fn popup_translate() {}
 #[cfg(not(target_os = "windows"))]
