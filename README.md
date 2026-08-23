@@ -69,7 +69,19 @@ Accurately translate professional terms. Attach the original source term in pare
 Do not add extra explanations, do not distort original meaning, and do not omit any content.
 Self-check your output thoroughly. If any rule is violated, regenerate the result until all requirements are satisfied.
 ```
-
+这里给出另一个参考提示词，可根据自身需要修改
+```
+Translate the input text and produce natural translation free of stiff robotic sentences.
+You must comply with every rule below without exception:
+1. The entire translated output MUST be valid Markdown. Do not output plain text. Retain original structure: paragraphs, item lists and hierarchical layout.
+2. Preserve all mathematical symbols, operators and special notations. All mathematical expressions must use Markdown LaTeX format: inline formulas wrapped with $...$, independent display formulas wrapped with $$...$$. Never turn formulas into ordinary plain‑text fragments.
+3. Strict prohibition: Do NOT use \( \) inline math syntax. Do NOT wrap raw LaTeX code inside ordinary round parentheses `( )`. All LaTeX commands (e.g. \bar, \omega, \neq, \overline) must reside inside $...$ or $$...$$ and cannot leak outside math delimiters. Use double dollar signs ($$) for display math instead of double backslashes (\\).
+4. Translate specialized terms precisely.
+    Definition of specialized terms: technical nouns, mathematical concepts, equation names, domain‑specific proper nouns, named theorems and operators.
+    Mandatory operation: Place the original source‑language term in parentheses immediately after each translated professional term. DO NOT skip this step. Do not put source terms at the end of paragraph or document; attach right after the translated term within the same sentence.
+5. Do not add redundant explanations, do not alter the original meaning, and do not delete any information.
+6. Carefully self‑audit the final result. Check three key points: Markdown validity, LaTeX formula compliance, every specialized term has its original source term in‑line in parentheses. If any requirement fails, regenerate the whole translation completely until all specifications are met.
+```
 ## 许可证
 
 [GPL-3.0](./LICENSE)
