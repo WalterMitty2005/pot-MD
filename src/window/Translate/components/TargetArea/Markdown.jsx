@@ -41,6 +41,42 @@ export function looksLikeMarkdown(text) {
     return false;
 }
 
+/**
+ * Normalize LaTeX math delimiters to what remark-math understands.
+ * remark-math only parses $...$ (inline) and $$...$$ (display); it does
+ * NOT recognise the LaTeX-standard \(...\) / \[...\] that many LLMs emit.
+ * Convert those into $...$ / $$...$$ before rendering.
+ * Fenced code blocks are temporarily stashed so a literal \( inside code
+ * is never rewritten.
+ */
+export function normalizeMath(text) {
+    if (typeof text !== 'string' || text === '') {
+        return text;
+    }
+    const blocks = [];
+    const SENTINEL = '\u0000';
+    // 1. stash fenced code blocks
+    const protectedText = text.replace(/```[\s\S]*?```|~~~[\s\S]*?~~~/g, (block) => {
+        blocks.push(block);
+        return `${SENTINEL}${blocks.length - 1}${SENTINEL}`;
+    });
+    // 2. display math \[ ... \] → $$ ... $$
+    const blockReplaced = protectedText.replace(
+        /\\\[([\s\S]*?)\\\]/g,
+        (_, inner) => `$$${inner}$$`,
+    );
+    // 3. inline math \( ... \) → $ ... $
+    const inlineReplaced = blockReplaced.replace(
+        /\\\(([\s\S]*?)\\\)/g,
+        (_, inner) => `$${inner}$`,
+    );
+    // 4. restore code blocks
+    return inlineReplaced.replace(
+        new RegExp(`${SENTINEL}(\\d+)${SENTINEL}`, 'g'),
+        (_, i) => blocks[+i],
+    );
+}
+
 export default function Markdown({ text, fontSize }) {
     return (
         <div
@@ -69,7 +105,7 @@ export default function Markdown({ text, fontSize }) {
                         </a>
                     ),
                 }}>
-                {text}
+                {normalizeMath(text)}
             </ReactMarkdown>
         </div>
     );
