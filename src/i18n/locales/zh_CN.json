@@ -494,7 +494,11 @@
             "blacklist_desc": "在除下列应用外的所有应用中出现弹窗",
             "process_name_placeholder": "进程名（如 chrome.exe）",
             "current_process": "当前前台应用",
-            "add_current": "添加当前应用"
+            "add_current": "添加当前应用",
+            "opacity": "弹窗不透明度",
+            "position_offset": "位置偏移（像素）",
+            "offset_x": "水平偏移",
+            "offset_y": "垂直偏移"
         }
     }
 }

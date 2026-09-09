@@ -494,7 +494,11 @@
             "blacklist_desc": "Popup appears everywhere except the applications listed below",
             "process_name_placeholder": "Process name (e.g. chrome.exe)",
             "current_process": "Current foreground application",
-            "add_current": "Add current"
+            "add_current": "Add current",
+            "opacity": "Popup Opacity",
+            "position_offset": "Position Offset (px)",
+            "offset_x": "Horizontal Offset",
+            "offset_y": "Vertical Offset"
         }
     }
 }

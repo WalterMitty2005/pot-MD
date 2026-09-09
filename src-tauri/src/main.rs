@@ -173,6 +173,7 @@ fn main() {
             popup_get_foreground_process,
             popup_set_enabled,
             popup_get_text,
+            popup_get_preferences,
             popup_translate
         ])
         .on_system_tray_event(tray_event_handler)

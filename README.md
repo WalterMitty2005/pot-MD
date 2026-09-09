@@ -25,6 +25,7 @@
 ## 更新日志
 | 版本号 | 更新内容 |
 |---|---|
+| 3.0.7-MD.8 | 修复划词弹窗误触发：按下时要求光标为文本 I-beam 才判定划词，拖动文件（QQ 发文件）、截图选框、拖窗口等操作不再被误拦截干扰；弹窗新增基础不透明度（0~100%）与相对鼠标水平/垂直偏移（像素）设置 |
 | 3.0.7-MD.7 | 文字识别（Recognize）输出页支持 Markdown 渲染：识别结果含 Markdown 语法时自动渲染为 Markdown（公式/代码块/表格/标题），底部工具栏可手动切换渲染/原文视图，识别页设置新增「渲染 Markdown 格式」开关 |
 | 3.0.7-MD.6 | 公式格式兼容：AI 翻译结果中的 `\(...\)`（行内）与 `\[...\]`（块级）LaTeX 定界符自动标准化为 `$...$` / `$$...$$`，修复部分模型输出 `\(x^2\)` 时公式以字面文本显示的问题；代码块内容不误转换 |
 | 3.0.7-MD.5 | 新增划词弹窗（Selection Popup）：选中文本后弹出小巧翻译卡片，支持翻译/复制；首次启动自动写入默认快捷键（划词翻译 Alt+A / 输入翻译 Alt+D / 文字识别 Alt+Q / 截图 Alt+S）；鼠标离弹窗越近越清晰、越远离越透明，超出阈值自动隐藏；弹窗采用 CSS 大圆角 + 磨砂模糊 + 白色描边卡片形态（无黑边，背景更实）；弹窗「翻译」按钮模拟用户绑定快捷键，与手动按快捷键完全等价；更新 README 下载区与 CHANGELOG |
@@ -32,16 +33,16 @@
 
 ## 下载安装
 
-### 最新版本（3.0.7-MD.7）
+### 最新版本（3.0.7-MD.8）
 
-> 文字识别输出页支持 Markdown 渲染，可与源码视图切换。
+> 修复划词弹窗对拖拽操作（拖文件/截图选框/拖窗口）的误触发，弹窗支持调节不透明度与位置偏移。
 
-- Windows 安装包: [`pot-MD_3.0.7-MD.7_x64-setup.exe`](https://github.com/WalterMitty2005/pot-MD/releases/download/v3.0.7-MD.7/pot-MD_3.0.7-MD.7_x64-setup.exe)（NSIS 安装包）
-- 绿色版: [`pot-MD_3.0.7-MD.7_x64.exe`](https://github.com/WalterMitty2005/pot-MD/releases/download/v3.0.7-MD.7/pot-MD_3.0.7-MD.7_x64.exe)（免安装，直接运行）
+- Windows 安装包: [`pot-MD_3.0.7-MD.8_x64-setup.exe`](https://github.com/WalterMitty2005/pot-MD/releases/download/v3.0.7-MD.8/pot-MD_3.0.7-MD.8_x64-setup.exe)（NSIS 安装包）
+- 绿色版: [`pot-MD_3.0.7-MD.8_x64.exe`](https://github.com/WalterMitty2005/pot-MD/releases/download/v3.0.7-MD.8/pot-MD_3.0.7-MD.8_x64.exe)（免安装，直接运行）
 
-### 历史版本（3.0.7-MD.6 / 3.0.7-MD.5 / 3.0.7-MD.4）
+### 历史版本（3.0.7-MD.7 / 3.0.7-MD.6 / 3.0.7-MD.5 / 3.0.7-MD.4）
 
-- 前往 [GitHub Releases](https://github.com/WalterMitty2005/pot-MD/releases) 页面下载 MD.6 / MD.5 / MD.4 版本（保持原有包不变）。
+- 前往 [GitHub Releases](https://github.com/WalterMitty2005/pot-MD/releases) 页面下载 MD.7 / MD.6 / MD.5 / MD.4 版本（保持原有包不变）。
 
 > 完整变更记录见 [CHANGELOG](./CHANGELOG)。
 

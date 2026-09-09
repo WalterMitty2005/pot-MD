@@ -10,8 +10,9 @@ mod win_impl {
     use windows::Win32::System::Com::{CoInitializeEx, CoUninitialize, COINIT_APARTMENTTHREADED};
     use windows::Win32::System::Threading::GetCurrentThreadId;
     use windows::Win32::UI::WindowsAndMessaging::{
-        CallNextHookEx, DispatchMessageW, GetMessageW, MSLLHOOKSTRUCT, PostThreadMessageW,
-        SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, MSG, WH_MOUSE_LL, WM_QUIT,
+        CallNextHookEx, DispatchMessageW, GetCursorInfo, GetMessageW, LoadCursorW, MSLLHOOKSTRUCT,
+        PostThreadMessageW, SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, CURSORINFO,
+        MSG, OCR_IBEAM, WH_MOUSE_LL, WM_QUIT,
     };
     use windows::Win32::UI::Input::KeyboardAndMouse::{
         INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP, SendInput,
@@ -45,8 +46,13 @@ mod win_impl {
         }
     }
 
-    // Drag detection state (mouse down position)
-    static DRAG_START: Mutex<Option<(i32, i32)>> = Mutex::new(None);
+    // Drag detection state (mouse down position + whether the cursor was a
+    // text I-beam at press time). Requiring an I-beam at press time is what
+    // distinguishes "text selection" from plain drags (dragging a file, a
+    // window, or a screenshot/Cropper rubber-band rect): those start with an
+    // arrow or cross cursorscreen and would otherwise be misread as a
+    // selection, clobbering the app (e.g. QQ file-send, screenshot box).
+    static DRAG_START: Mutex<Option<(i32, i32, bool)>> = Mutex::new(None);
     const MIN_DRAG_DISTANCE: f64 = 5.0;
     const MAX_DBLCLICK_INTERVAL: Duration = Duration::from_millis(500);
     const MAX_DBLCLICK_DISTANCE: f64 = 5.0;
@@ -57,6 +63,25 @@ mod win_impl {
     //  - in between:            opacity fades linearly 1.0 -> 0.0
     const POPUP_VISIBLE_MARGIN: i32 = 12;
     const POPUP_FADE_MARGIN: i32 = 140;
+
+    // True when the system-wide cursor is the text I-beam (OCR_IBEAM).
+    // GetCursorInfo returns the cursor currently captured globally, even when
+    // the mouse is over another process' window (GetCursor alone would return
+    // NULL there).
+    fn cursor_is_ibeam() -> bool {
+        unsafe {
+            let beam = LoadCursorW(
+                None,
+                windows::core::PCWSTR(OCR_IBEAM.0 as usize as *const u16),
+            )
+            .unwrap_or_default();
+            let mut ci = CURSORINFO {
+                cbSize: std::mem::size_of::<CURSORINFO>() as u32,
+                ..Default::default()
+            };
+            GetCursorInfo(&mut ci).is_ok() && ci.hCursor == beam
+        }
+    }
 
     unsafe extern "system" fn mouse_hook_proc(
         code: i32,
@@ -69,8 +94,9 @@ mod win_impl {
                 // WM_LBUTTONDOWN = 0x0201
                 0x0201 => {
                     if let Some(hs) = (lparam.0 as *const MSLLHOOKSTRUCT).as_ref() {
+                        let is_ibeam = cursor_is_ibeam();
                         *DRAG_START.lock().unwrap_or_else(|e| e.into_inner()) =
-                            Some((hs.pt.x, hs.pt.y));
+                            Some((hs.pt.x, hs.pt.y, is_ibeam));
                     }
                 }
                 // WM_MOUSEMOVE = 0x0200
@@ -91,14 +117,15 @@ mod win_impl {
                         .map(|hs| (hs.pt.x, hs.pt.y))
                         .unwrap_or((0, 0));
 
-                    let drag_dist = DRAG_START
+                    let (drag_dist, from_ibeam) = DRAG_START
                         .lock()
                         .unwrap_or_else(|e| e.into_inner())
-                        .map(|(sx, sy)| {
-                            ((release_pos.0 - sx).pow(2) + (release_pos.1 - sy).pow(2)) as f64
+                        .map(|(sx, sy, beam)| {
+                            let d =
+                                ((release_pos.0 - sx).pow(2) + (release_pos.1 - sy).pow(2)) as f64;
+                            (d.sqrt(), beam)
                         })
-                        .unwrap_or(0.0)
-                        .sqrt();
+                        .unwrap_or((0.0, false));
                     *DRAG_START.lock().unwrap_or_else(|e| e.into_inner()) = None;
 
                     // Detect double click (two clicks within 500ms & 5px)
@@ -122,8 +149,13 @@ mod win_impl {
                     // hide). If the click was on the popup it stays visible.
                     update_popup_opacity(release_pos.0, release_pos.1);
 
-                    // Trigger only on a real drag selection or double click
-                    if (drag_dist >= MIN_DRAG_DISTANCE || is_double)
+                    // Trigger only on a real drag selection or double click,
+                    // AND only when the press started on a text I-beam cursor.
+                    // Non-I-beam presses (dragging a file, a window, or a
+                    // screenshot/crop rubber band) are regular drags, not
+                    // selections, so we must not hijack them.
+                    if from_ibeam
+                        && (drag_dist >= MIN_DRAG_DISTANCE || is_double)
                         && !POPUP_PENDING.swap(true, Ordering::SeqCst)
                     {
                         thread::spawn(|| {
@@ -204,10 +236,15 @@ mod win_impl {
             return;
         }
 
-        // Map distance -> opacity: 1.0 at VISIBLE_MARGIN, 0.0 at FADE_MARGIN.
+        // Map distance -> opacity: base at VISIBLE_MARGIN, 0.0 at FADE_MARGIN.
+        // The base (maximum) opacity is user-configurable (popup_opacity).
         let span = (POPUP_FADE_MARGIN - POPUP_VISIBLE_MARGIN).max(1) as f64;
         let d = (dist - POPUP_VISIBLE_MARGIN).max(0) as f64;
-        let opacity = (1.0 - d / span).clamp(0.0, 1.0);
+        let base = get("popup_opacity")
+            .and_then(|v| v.as_f64())
+            .unwrap_or(1.0)
+            .clamp(0.0, 1.0);
+        let opacity = (base * (1.0 - d / span)).clamp(0.0, base);
 
         // Avoid spamming the event on every mouse move: only emit when the
         // value actually changed meaningfully.
@@ -546,6 +583,17 @@ pub use win_impl::{
 #[tauri::command]
 pub fn popup_get_text() -> String {
     POPUP_TEXT.lock().unwrap().clone()
+}
+
+// Fetch the popup's user-configured base opacity (0..1). The frontend uses
+// this as the initial/restored card opacity so a translucent popup does not
+// flash fully opaque on show.
+#[tauri::command]
+pub fn popup_get_preferences() -> f64 {
+    crate::config::get("popup_opacity")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(1.0)
+        .clamp(0.0, 1.0)
 }
 
 #[cfg(not(target_os = "windows"))]

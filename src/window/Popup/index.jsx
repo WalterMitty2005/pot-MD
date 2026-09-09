@@ -13,6 +13,8 @@ export default function Popup() {
     const [text, setText] = useState('');
     const [popupOpacity, setPopupOpacity] = useState(1);
     const timerRef = useRef(null);
+    // Base (maximum) opacity from config, applied on every show
+    const baseOpacityRef = useRef(1);
 
     // Keep the Rust hook thread's visibility cache in sync. While the popup is
     // hidden, the global mouse hook skips all window IPC on every mouse move,
@@ -42,12 +44,16 @@ export default function Popup() {
         // fetch the stored text first, then rely on events for updates.
         (async () => {
             try {
+                // User-configured base opacity, so a translucent popup does
+                // not flash fully opaque on show.
+                const base = await invoke('popup_get_preferences');
+                baseOpacityRef.current = typeof base === 'number' ? base : 1;
                 const stored = await invoke('popup_get_text');
                 if (stored && stored.trim()) {
                     setText(stored);
-                    // Reset opacity in case the popup was faded out by the
-                    // mouse-move-away logic on the Rust side.
-                    setPopupOpacity(1);
+                    // Reset opacity (to base) in case the popup was faded out
+                    // by the mouse-move-away logic on the Rust side.
+                    setPopupOpacity(baseOpacityRef.current);
                     await showPopup();
                     armAutoClose();
                 }
@@ -58,7 +64,7 @@ export default function Popup() {
 
         const unlisten = listen('popup_text', async (event) => {
             setText(event.payload);
-            setPopupOpacity(1);
+            setPopupOpacity(baseOpacityRef.current);
             await showPopup();
             armAutoClose();
         });

@@ -9,6 +9,7 @@ import {
     Input,
     Radio,
     RadioGroup,
+    Slider,
     Switch,
 } from '@nextui-org/react';
 import { MdAdd, MdApps } from 'react-icons/md';
@@ -23,6 +24,9 @@ export default function SelectionPopup() {
     const [popupEnabled, setPopupEnabled] = useConfig('popup_enabled', false);
     const [listMode, setListMode] = useConfig('popup_list_mode', 'blacklist');
     const [processList, setProcessList] = useConfig('popup_process_list', []);
+    const [popupOpacity, setPopupOpacity] = useConfig('popup_opacity', 1);
+    const [popupOffsetX, setPopupOffsetX] = useConfig('popup_offset_x', 8);
+    const [popupOffsetY, setPopupOffsetY] = useConfig('popup_offset_y', 8);
     const [newProcess, setNewProcess] = useState('');
     const [foregroundProcess, setForegroundProcess] = useState('');
 
@@ -150,6 +154,52 @@ export default function SelectionPopup() {
                                     {process}
                                 </Chip>
                             ))}
+                        </div>
+                    </CardBody>
+                </Card>
+            ) : null}
+            {popupEnabled ? (
+                <Card className='mb-[10px]'>
+                    <CardBody className='p-[10px]'>
+                        <div className='flex justify-between items-center'>
+                            <p className='text-sm font-medium'>{t('popup.opacity')}</p>
+                            <p className='text-sm text-default-500'>
+                                {Math.round((popupOpacity ?? 1) * 100)}%
+                            </p>
+                        </div>
+                        <Slider
+                            size='sm'
+                            aria-label={t('popup.opacity')}
+                            minValue={0}
+                            maxValue={1}
+                            step={0.05}
+                            value={popupOpacity ?? 1}
+                            onChange={(v) => {
+                                setPopupOpacity(Array.isArray(v) ? v[0] : v);
+                            }}
+                        />
+                        <p className='text-sm font-medium mt-[10px] mb-[5px]'>
+                            {t('popup.position_offset')}
+                        </p>
+                        <div className='flex gap-[10px]'>
+                            <Input
+                                type='number'
+                                size='sm'
+                                label={t('popup.offset_x')}
+                                value={`${popupOffsetX ?? 8}`}
+                                onValueChange={(v) => {
+                                    setPopupOffsetX(parseInt(v, 10) || 0);
+                                }}
+                            />
+                            <Input
+                                type='number'
+                                size='sm'
+                                label={t('popup.offset_y')}
+                                value={`${popupOffsetY ?? 8}`}
+                                onValueChange={(v) => {
+                                    setPopupOffsetY(parseInt(v, 10) || 0);
+                                }}
+                            />
                         </div>
                     </CardBody>
                 </Card>

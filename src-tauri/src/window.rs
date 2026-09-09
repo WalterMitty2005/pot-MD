@@ -325,9 +325,11 @@ fn clamp_popup_position(
     let pos = monitor.position();
     let max_x = pos.x + size.width as i32 - w as i32;
     let max_y = pos.y + size.height as i32 - h as i32;
-    // Offset 8px from cursor
-    mouse.x += 8;
-    mouse.y += 8;
+    // Positional offset from the cursor, user-configurable (popup_offset_x/y)
+    let ox = get("popup_offset_x").and_then(|v| v.as_i64()).unwrap_or(8) as i32;
+    let oy = get("popup_offset_y").and_then(|v| v.as_i64()).unwrap_or(8) as i32;
+    mouse.x += ox;
+    mouse.y += oy;
     if mouse.x > max_x {
         mouse.x = max_x;
     }

@@ -474,6 +474,24 @@
             "delete_space": "刪除空格",
             "markdown_view_on": "以 Markdown 渲染",
             "markdown_view_off": "顯示原文"
+        },
+        "popup": {
+            "translate": "翻譯",
+            "copy": "複製",
+            "enable": "啟用划詞彈窗",
+            "enabled_success": "划詞彈窗已啟用",
+            "list_mode": "名單模式",
+            "whitelist": "白名單",
+            "blacklist": "黑名單",
+            "whitelist_desc": "僅在下列應用中出現彈窗",
+            "blacklist_desc": "除下列應用外的所有應用中出現彈窗",
+            "process_name_placeholder": "進程名（如 chrome.exe）",
+            "current_process": "當前前景應用",
+            "add_current": "新增當前應用",
+            "opacity": "彈窗不透明度",
+            "position_offset": "位置偏移（像素）",
+            "offset_x": "水平偏移",
+            "offset_y": "垂直偏移"
         }
     }
 }
