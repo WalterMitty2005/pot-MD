@@ -498,7 +498,8 @@
             "opacity": "弹窗不透明度",
             "position_offset": "位置偏移（像素）",
             "offset_x": "水平偏移",
-            "offset_y": "垂直偏移"
+            "offset_y": "垂直偏移",
+            "fade_distance": "鼠标离开消失距离（像素）"
         }
     }
 }

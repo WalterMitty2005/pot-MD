@@ -226,7 +226,14 @@ mod win_impl {
         };
         let dist = ((dx * dx + dy * dy) as f64).sqrt() as i32;
 
-        if dist >= POPUP_FADE_MARGIN {
+        // Distance (px) from the popup at which it fully fades out and hides,
+        // user-configurable (popup_fade_distance).
+        let fade_margin = get("popup_fade_distance")
+            .and_then(|v| v.as_i64())
+            .unwrap_or(POPUP_FADE_MARGIN as i64)
+            .clamp(30, 1200) as i32;
+
+        if dist >= fade_margin {
             // Fully faded out — emit opacity 0 then hide it. Tauri 1.8 has no
             // window-level setOpacity, so the frontend applies the value to the
             // card via CSS and we hide from Rust.
@@ -236,9 +243,9 @@ mod win_impl {
             return;
         }
 
-        // Map distance -> opacity: base at VISIBLE_MARGIN, 0.0 at FADE_MARGIN.
+        // Map distance -> opacity: base at VISIBLE_MARGIN, 0.0 at fade_margin.
         // The base (maximum) opacity is user-configurable (popup_opacity).
-        let span = (POPUP_FADE_MARGIN - POPUP_VISIBLE_MARGIN).max(1) as f64;
+        let span = (fade_margin - POPUP_VISIBLE_MARGIN).max(1) as f64;
         let d = (dist - POPUP_VISIBLE_MARGIN).max(0) as f64;
         let base = get("popup_opacity")
             .and_then(|v| v.as_f64())
@@ -382,6 +389,13 @@ mod win_impl {
                 let _ = PostThreadMessageW(thread_id, WM_QUIT, WPARAM(0), LPARAM(0));
             }
         }
+    }
+
+    // Synchronise the visibility cache from the window layer (window.rs shows
+    // the popup directly on selection, so it must mark it visible here without
+    // waiting for the frontend round-trip).
+    pub fn popup_mark_visible(visible: bool) {
+        POPUP_VISIBLE.store(visible, Ordering::SeqCst);
     }
 
     // Listen for frontend-driven show/hide so the hook thread's visibility
@@ -574,8 +588,8 @@ pub static POPUP_TEXT: std::sync::Mutex<String> = std::sync::Mutex::new(String::
 
 #[cfg(target_os = "windows")]
 pub use win_impl::{
-    init_popup_visibility, popup_get_foreground_process, popup_set_enabled, popup_translate,
-    start_popup_monitor, stop_popup_monitor,
+    init_popup_visibility, popup_get_foreground_process, popup_mark_visible, popup_set_enabled,
+    popup_translate, start_popup_monitor, stop_popup_monitor,
 };
 
 // Fetch the current popup text (called by Popup window on mount to avoid
@@ -598,6 +612,8 @@ pub fn popup_get_preferences() -> f64 {
 
 #[cfg(not(target_os = "windows"))]
 pub fn init_popup_visibility(_app: &tauri::AppHandle) {}
+#[cfg(not(target_os = "windows"))]
+pub fn popup_mark_visible(_visible: bool) {}
 #[cfg(not(target_os = "windows"))]
 pub fn popup_translate() {}
 #[cfg(not(target_os = "windows"))]

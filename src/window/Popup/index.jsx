@@ -12,6 +12,7 @@ export default function Popup() {
     const { t } = useTranslation();
     const [text, setText] = useState('');
     const [popupOpacity, setPopupOpacity] = useState(1);
+    const [baseOpacity, setBaseOpacity] = useState(1);
     const timerRef = useRef(null);
     // Base (maximum) opacity from config, applied on every show
     const baseOpacityRef = useRef(1);
@@ -48,6 +49,7 @@ export default function Popup() {
                 // not flash fully opaque on show.
                 const base = await invoke('popup_get_preferences');
                 baseOpacityRef.current = typeof base === 'number' ? base : 1;
+                setBaseOpacity(baseOpacityRef.current);
                 const stored = await invoke('popup_get_text');
                 if (stored && stored.trim()) {
                     setText(stored);
@@ -114,7 +116,14 @@ export default function Popup() {
     }
 
     return (
-        <div className='w-screen h-screen flex items-center justify-center bg-white/70 backdrop-blur-xl rounded-2xl ring-1 ring-white/60 border border-white/40 overflow-hidden select-none transition-opacity duration-150' style={{ opacity: popupOpacity }}>
+        // When the base opacity is 100% the card background must be fully
+        // opaque; at lower base values a translucent frosted-glass panel
+        // shows through.
+        <div
+            className={`w-screen h-screen flex items-center justify-center ${
+                baseOpacity >= 0.99 ? 'bg-white' : 'bg-white/70'
+            } backdrop-blur-xl rounded-2xl ring-1 ring-white/60 border border-white/40 overflow-hidden select-none transition-opacity duration-150`}
+            style={{ opacity: popupOpacity }}>
             <div className='flex gap-[4px] p-[4px]'>
                 <Tooltip content={t('popup.translate')} placement='bottom' delay={500}>
                     <Button

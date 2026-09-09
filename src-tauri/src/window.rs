@@ -265,6 +265,10 @@ pub fn popup_window(text: String) {
                 mouse_position.x,
                 mouse_position.y,
             ));
+            let _ = window.show();
+            // Mark visible so the mouse-move fade logic can act immediately
+            // (without waiting for the frontend's show handler round-trip).
+            crate::popup::popup_mark_visible(true);
             let _ = window.emit("popup_text", text);
             return;
         }

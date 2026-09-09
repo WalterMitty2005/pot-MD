@@ -498,7 +498,8 @@
             "opacity": "Popup Opacity",
             "position_offset": "Position Offset (px)",
             "offset_x": "Horizontal Offset",
-            "offset_y": "Vertical Offset"
+            "offset_y": "Vertical Offset",
+            "fade_distance": "Dismiss Distance (px)"
         }
     }
 }

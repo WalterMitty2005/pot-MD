@@ -27,6 +27,7 @@ export default function SelectionPopup() {
     const [popupOpacity, setPopupOpacity] = useConfig('popup_opacity', 1);
     const [popupOffsetX, setPopupOffsetX] = useConfig('popup_offset_x', 8);
     const [popupOffsetY, setPopupOffsetY] = useConfig('popup_offset_y', 8);
+    const [popupFadeDistance, setPopupFadeDistance] = useConfig('popup_fade_distance', 140);
     const [newProcess, setNewProcess] = useState('');
     const [foregroundProcess, setForegroundProcess] = useState('');
 
@@ -198,6 +199,15 @@ export default function SelectionPopup() {
                                 value={`${popupOffsetY ?? 8}`}
                                 onValueChange={(v) => {
                                     setPopupOffsetY(parseInt(v, 10) || 0);
+                                }}
+                            />
+                            <Input
+                                type='number'
+                                size='sm'
+                                label={t('popup.fade_distance')}
+                                value={`${popupFadeDistance ?? 140}`}
+                                onValueChange={(v) => {
+                                    setPopupFadeDistance(parseInt(v, 10) || 140);
                                 }}
                             />
                         </div>
