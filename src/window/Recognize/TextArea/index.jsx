@@ -6,9 +6,11 @@ import React, { useEffect, useState } from 'react';
 import { CgSpaceBetween } from 'react-icons/cg';
 import { MdContentCopy } from 'react-icons/md';
 import { MdSmartButton } from 'react-icons/md';
+import { TbMarkdown, TbMarkdownOff } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 import { nanoid } from 'nanoid';
 
+import Markdown, { looksLikeMarkdown } from '../../Translate/components/TargetArea/Markdown';
 import { getServiceName, getServiceSouceType, ServiceSourceType } from '../../../utils/service_instance';
 import { currentServiceInstanceKeyAtom, languageAtom, recognizeFlagAtom } from '../ControlArea';
 import { invoke_plugin } from '../../../utils/invoke_plugin';
@@ -25,6 +27,8 @@ export default function TextArea(props) {
     const [autoCopy] = useConfig('recognize_auto_copy', false);
     const [deleteNewline] = useConfig('recognize_delete_newline', false);
     const [hideWindow] = useConfig('recognize_hide_window', false);
+    const [markdownRender] = useConfig('recognize_markdown_render', true);
+    const [appFontSize] = useConfig('app_font_size', 16);
     const recognizeFlag = useAtomValue(recognizeFlagAtom);
     const currentServiceInstanceKey = useAtomValue(currentServiceInstanceKeyAtom);
     const language = useAtomValue(languageAtom);
@@ -32,8 +36,17 @@ export default function TextArea(props) {
     const [loading, setLoading] = useState(false);
     const [text, setText] = useAtom(textAtom);
     const [error, setError] = useState('');
+    const [markdownForce, setMarkdownForce] = useState(null);
     const pluginList = useAtomValue(pluginListAtom);
     const { t } = useTranslation();
+
+    // whether to render the recognized text with the Markdown renderer.
+    // null in markdownForce means "auto detect", otherwise the user toggled it manually.
+    const useMarkdown =
+        markdownRender !== false &&
+        typeof text === 'string' &&
+        text !== '' &&
+        (markdownForce === null ? looksLikeMarkdown(text) : markdownForce);
 
     useEffect(() => {
         setText('');
@@ -152,15 +165,23 @@ export default function TextArea(props) {
                     </div>
                 ) : (
                     <>
-                        {text && (
-                            <textarea
-                                value={text}
-                                className='bg-content1 h-full m-[12px] mb-0 resize-none focus:outline-none'
-                                onChange={(e) => {
-                                    setText(e.target.value);
-                                }}
-                            />
-                        )}
+                        {text &&
+                            (useMarkdown ? (
+                                <div className='m-[12px] mb-0 h-full overflow-y-auto'>
+                                    <Markdown
+                                        text={text}
+                                        fontSize={appFontSize}
+                                    />
+                                </div>
+                            ) : (
+                                <textarea
+                                    value={text}
+                                    className='bg-content1 h-full m-[12px] mb-0 resize-none focus:outline-none'
+                                    onChange={(e) => {
+                                        setText(e.target.value);
+                                    }}
+                                />
+                            ))}
                         {error && (
                             <textarea
                                 value={error}
@@ -186,6 +207,27 @@ export default function TextArea(props) {
                             }}
                         >
                             <MdContentCopy className='text-[16px]' />
+                        </Button>
+                    </Tooltip>
+                    <Tooltip
+                        content={
+                            useMarkdown ? t('recognize.markdown_view_off') : t('recognize.markdown_view_on')
+                        }
+                    >
+                        <Button
+                            isIconOnly
+                            size='sm'
+                            variant='light'
+                            isDisabled={!text || markdownRender === false}
+                            onPress={() => {
+                                setMarkdownForce(!useMarkdown);
+                            }}
+                        >
+                            {useMarkdown ? (
+                                <TbMarkdownOff className='text-[16px]' />
+                            ) : (
+                                <TbMarkdown className='text-[16px]' />
+                            )}
                         </Button>
                     </Tooltip>
                     <Tooltip content={t('recognize.delete_newline')}>

@@ -143,7 +143,8 @@
                 "delete_newline": "自动删除换行",
                 "auto_copy": "自动复制",
                 "close_on_blur": "失去焦点时关闭窗口",
-                "hide_window": "隐藏识别窗口"
+                "hide_window": "隐藏识别窗口",
+                "markdown_render": "渲染 Markdown 格式"
             },
             "hotkey": {
                 "label": "热键设置",
@@ -477,7 +478,9 @@
             "copy_img": "复制图片",
             "copy_text": "复制",
             "delete_newline": "删除换行",
-            "delete_space": "删除空格"
+            "delete_space": "删除空格",
+            "markdown_view_on": "以 Markdown 渲染",
+            "markdown_view_off": "显示原文"
         },
         "popup": {
             "translate": "翻译",

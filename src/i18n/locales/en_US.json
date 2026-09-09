@@ -143,7 +143,8 @@
                 "delete_newline": "Auto Delete Newline",
                 "auto_copy": "Auto Copy",
                 "close_on_blur": "Close window when focus lost",
-                "hide_window": "Hide Recognition Window"
+                "hide_window": "Hide Recognition Window",
+                "markdown_render": "Render Markdown"
             },
             "hotkey": {
                 "label": "Hotkey",
@@ -477,7 +478,9 @@
             "copy_img": "Copy Image",
             "copy_text": "Copy",
             "delete_newline": "Delete Newline",
-            "delete_space": "Delete Space"
+            "delete_space": "Delete Space",
+            "markdown_view_on": "Render Markdown",
+            "markdown_view_off": "Show Plain Text"
         },
         "popup": {
             "translate": "Translate",

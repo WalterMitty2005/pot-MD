@@ -1,3 +1,19 @@
+## 3.0.7-MD.7 (2026-9-9)
+
+基于 3.0.7-MD.6，文字识别（Recognize）输出页支持 Markdown 渲染：
+
+### New feature:
+
+-   识别页 Markdown 渲染：文字识别的输出区域复用翻译页的 Markdown 渲染能力，
+    识别结果含 Markdown 语法（公式、代码块、表格、标题等）时自动以 Markdown 展示。
+-   手动切换：识别页底部工具栏新增 Markdown 渲染开关，可在渲染视图与原文视图间切换。
+-   设置项：识别页配置新增「渲染 Markdown 格式」开关（recognize_markdown_render，默认开启），
+    与翻译页独立控制。
+
+### Improvements:
+
+-   复用翻译页 Markdown 组件，自动兼容 `\(...\)` / `\[...\]` LaTeX 公式定界符。
+
 ## 3.0.7-MD.6 (2026-8-25)
 
 基于 3.0.7-MD.5，兼容更多 AI 输出的数学公式定界符：
