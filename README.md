@@ -99,4 +99,4 @@ You must comply with every rule below without exception:
 
 ## 原项目说明
 
-原版 pot 的完整文档请参阅 [README.md](./README.md)。
+原版 pot（pot-app/pot-desktop）：<https://github.com/pot-app/pot-desktop>
