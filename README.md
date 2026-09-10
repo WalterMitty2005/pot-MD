@@ -54,6 +54,15 @@
 
 > 完整变更记录见 [CHANGELOG](./CHANGELOG)。
 
+## 配套插件：AI 通用识别
+
+[pot-app-recognize-plugin-ai-ocr](https://github.com/WalterMitty2005/pot-app-recognize-plugin-ai-ocr)
+—— 配套的文字识别插件，基于 OpenAI 兼容协议调用任意视觉模型完成识别，识别结果可由本项目的 Markdown / 公式渲染直接展示。
+
+- 支持 **文字识别 / 公式识别 / 图文混合** 三种模式；公式模式默认要求模型输出 LaTeX（行内 `$...$`、独立 `$$...$$`），正是本项目 Markdown 渲染所支持的格式。
+- 可自由配置 API 端点、API Key、模型与自定义 Prompt，兼容 OpenAI、通义千问 VL、智谱 GLM-4V、DeepSeek-VL、硅基流动 SiliconFlow，以及 Ollama / LM Studio 等本地无鉴权服务。
+- 安装：pot-MD 设置 → 插件 → 识别 → 安装插件，选择其 Releases 中的 `plugin.com.walternit.ai_ocr.potext`。
+
 ## 技术细节
 
 ### Markdown 渲染
