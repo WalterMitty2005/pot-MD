@@ -171,6 +171,7 @@ fn main() {
             font_list,
             aliyun,
             popup_get_foreground_process,
+            popup_list_applications,
             popup_set_enabled,
             popup_get_text,
             popup_get_preferences,

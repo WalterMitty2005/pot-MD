@@ -203,7 +203,7 @@
             "about": {
                 "label": "關於",
                 "title": "關於應用程式",
-                "website": "官方網站",
+                "website": "pot 原版官網",
                 "github": "GitHub",
                 "feedback": "問題回饋",
                 "issue": "問題回報",
@@ -226,7 +226,14 @@
             "downloading": "下載中…",
             "installing": "安裝中…",
             "cancel": "取消",
-            "installed": "安裝完成，請重新啟動應用程式以使變更生效"
+            "installed": "安裝完成，請重新啟動應用程式以使變更生效",
+            "current_version": "目前版本",
+            "latest_version": "最新版本",
+            "download": "前往下載",
+            "open_release": "開啟發行頁面",
+            "failed": "檢查更新失敗",
+            "no_notes": "此版本未提供更新說明。",
+            "no_release": "儲存庫尚未發佈任何版本"
         },
         "services": {
             "help": "設定指南",
@@ -492,7 +499,13 @@
             "position_offset": "位置偏移（像素）",
             "offset_x": "水平偏移",
             "offset_y": "垂直偏移",
-            "fade_distance": "滑鼠離開消失距離（像素）"
+            "fade_distance": "滑鼠離開消失距離（像素）",
+            "select_app": "選擇應用程式",
+            "select_app_search": "搜尋應用程式名稱或視窗標題",
+            "select_app_empty": "找不到符合的應用程式",
+            "select_app_added": "已新增",
+            "select_app_refresh": "重新整理應用程式清單",
+            "select_app_browse": "瀏覽 exe 檔案…"
         }
     }
 }

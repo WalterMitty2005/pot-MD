@@ -10,7 +10,15 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+# Stale build outputs: vite's emptyDir trips the bulk-delete guard on Windows,
+# so `dist` is renamed out of the way before each rebuild instead of wiped.
+# They accumulate here rather than in the repo root.
+.build-cache/
+dist_old*.bak
 *.local
+
+# Vite config-load temp files
+vite.config.js.timestamp-*.mjs
 
 # Editor directories and files
 .idea

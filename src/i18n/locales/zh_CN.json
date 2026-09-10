@@ -203,7 +203,7 @@
             "about": {
                 "label": "关于应用",
                 "title": "关于应用",
-                "website": "官网",
+                "website": "pot原版官网",
                 "github": "GitHub",
                 "feedback": "问题反馈",
                 "issue": "议题",
@@ -230,7 +230,14 @@
             "downloading": "下载中…",
             "installing": "安装中…",
             "cancel": "取消",
-            "installed": "安装完成，重启应用生效"
+            "installed": "安装完成，重启应用生效",
+            "current_version": "当前版本",
+            "latest_version": "最新版本",
+            "download": "前往下载",
+            "open_release": "打开发布页",
+            "failed": "检查更新失败",
+            "no_notes": "该版本未提供更新说明。",
+            "no_release": "仓库中尚未发布任何版本"
         },
         "services": {
             "help": "配置指南",
@@ -499,7 +506,13 @@
             "position_offset": "位置偏移（像素）",
             "offset_x": "水平偏移",
             "offset_y": "垂直偏移",
-            "fade_distance": "鼠标离开消失距离（像素）"
+            "fade_distance": "鼠标离开消失距离（像素）",
+            "select_app": "选择应用",
+            "select_app_search": "搜索应用名称或窗口标题",
+            "select_app_empty": "未找到匹配的应用",
+            "select_app_added": "已添加",
+            "select_app_refresh": "刷新应用列表",
+            "select_app_browse": "浏览 exe 文件…"
         }
     }
 }

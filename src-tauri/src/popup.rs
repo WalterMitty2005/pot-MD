@@ -1,3 +1,14 @@
+// One selectable application in the popup blacklist/whitelist picker.
+// `process` is the executable name -- the exact value the popup monitor
+// compares against (case-insensitively) in `is_popup_enabled_for_current_process`.
+// `title` is a visible window title, purely so the user can tell apart two
+// processes that share an exe name.
+#[derive(serde::Serialize, Clone)]
+pub struct PopupApp {
+    pub process: String,
+    pub title: String,
+}
+
 #[cfg(target_os = "windows")]
 mod win_impl {
     use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
@@ -6,14 +17,17 @@ mod win_impl {
     use std::time::{Duration, Instant};
 
     use log::{info, warn};
-    use windows::Win32::Foundation::{LPARAM, LRESULT, WPARAM};
+    use windows::Win32::Foundation::{BOOL, HWND, LPARAM, LRESULT, WPARAM};
     use windows::Win32::System::Com::{CoInitializeEx, CoUninitialize, COINIT_APARTMENTTHREADED};
     use windows::Win32::System::Threading::GetCurrentThreadId;
     use windows::Win32::UI::WindowsAndMessaging::{
-        CallNextHookEx, DispatchMessageW, GetCursorInfo, GetMessageW, LoadCursorW, MSLLHOOKSTRUCT,
-        PostThreadMessageW, SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, CURSORINFO,
-        MSG, OCR_IBEAM, WH_MOUSE_LL, WM_QUIT,
+        CallNextHookEx, DispatchMessageW, EnumWindows, GetCursorInfo, GetMessageW,
+        GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId, IsWindowVisible,
+        LoadCursorW, MSLLHOOKSTRUCT, PostThreadMessageW, SetWindowsHookExW, TranslateMessage,
+        UnhookWindowsHookEx, CURSORINFO, MSG, OCR_IBEAM, WH_MOUSE_LL, WM_QUIT,
     };
+
+    use super::PopupApp;
     use windows::Win32::UI::Input::KeyboardAndMouse::{
         INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP, SendInput,
         VIRTUAL_KEY,
@@ -413,6 +427,106 @@ mod win_impl {
         });
     }
 
+    // EnumWindows only accepts a single LPARAM, so the PID->exe-name table and
+    // the result vector are smuggled through one pointer to this struct.
+    struct EnumAppsCtx {
+        names: std::collections::BTreeMap<u32, String>,
+        apps: Vec<PopupApp>,
+    }
+
+    // Callback for EnumWindows: keep the visible top-level windows that own a
+    // title, and resolve each one back to its owner process's exe name.
+    // Must stay `extern "system"` -- Windows calls it with the stdcall ABI.
+    unsafe extern "system" fn collect_app_window(hwnd: HWND, lparam: LPARAM) -> BOOL {
+        unsafe {
+            let ctx = &mut *(lparam.0 as *mut EnumAppsCtx);
+            if IsWindowVisible(hwnd).as_bool() {
+                let len = GetWindowTextLengthW(hwnd);
+                if len > 0 {
+                    let mut buf = vec![0u16; (len + 1) as usize];
+                    let n = GetWindowTextW(hwnd, &mut buf);
+                    if n > 0 {
+                        let mut pid: u32 = 0;
+                        GetWindowThreadProcessId(hwnd, Some(&mut pid));
+                        if let Some(name) = ctx.names.get(&pid) {
+                            if !name.is_empty() {
+                                ctx.apps.push(PopupApp {
+                                    process: name.clone(),
+                                    title: String::from_utf16_lossy(&buf[..n as usize]),
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            // TRUE keeps the enumeration going.
+            BOOL(1)
+        }
+    }
+
+    // Enumerate the applications that currently own a visible, titled window.
+    // The settings page uses this so the user can *pick* an app for the popup
+    // blacklist/whitelist instead of having to already know its exe name.
+    //
+    // Only windowed apps are listed on purpose: enumerating processes instead
+    // would return 100+ background service hosts, which is useless for
+    // "which app should show the popup?". Result is deduped by exe name (a
+    // browser with 20 windows is one entry) and sorted for a stable UI.
+    #[tauri::command]
+    pub fn popup_list_applications() -> Vec<PopupApp> {
+        use std::collections::{BTreeMap, HashSet};
+
+        use windows::Win32::Foundation::CloseHandle;
+        use windows::Win32::System::Diagnostics::ToolHelp::{
+            CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W,
+            TH32CS_SNAPPROCESS,
+        };
+
+        let mut names: BTreeMap<u32, String> = BTreeMap::new();
+        unsafe {
+            if let Ok(snapshot) = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) {
+                let mut entry = PROCESSENTRY32W {
+                    dwSize: std::mem::size_of::<PROCESSENTRY32W>() as u32,
+                    ..Default::default()
+                };
+                if Process32FirstW(snapshot, &mut entry).is_ok() {
+                    loop {
+                        names.insert(
+                            entry.th32ProcessID,
+                            String::from_utf16_lossy(&entry.szExeFile)
+                                .trim_end_matches('\0')
+                                .to_string(),
+                        );
+                        if Process32NextW(snapshot, &mut entry).is_err() {
+                            break;
+                        }
+                    }
+                }
+                let _ = CloseHandle(snapshot);
+            }
+        }
+
+        let mut ctx = EnumAppsCtx {
+            names,
+            apps: Vec::new(),
+        };
+        unsafe {
+            let _ = EnumWindows(
+                Some(collect_app_window),
+                LPARAM(&mut ctx as *mut EnumAppsCtx as isize),
+            );
+        }
+
+        let mut seen: HashSet<String> = HashSet::new();
+        let mut apps: Vec<PopupApp> = ctx
+            .apps
+            .into_iter()
+            .filter(|a| seen.insert(a.process.to_lowercase()))
+            .collect();
+        apps.sort_by_key(|a| a.process.to_lowercase());
+        apps
+    }
+
     #[tauri::command]
     pub fn popup_get_foreground_process() -> String {
         get_foreground_process_name().unwrap_or_default()
@@ -588,8 +702,9 @@ pub static POPUP_TEXT: std::sync::Mutex<String> = std::sync::Mutex::new(String::
 
 #[cfg(target_os = "windows")]
 pub use win_impl::{
-    init_popup_visibility, popup_get_foreground_process, popup_mark_visible, popup_set_enabled,
-    popup_translate, start_popup_monitor, stop_popup_monitor,
+    init_popup_visibility, popup_get_foreground_process, popup_list_applications,
+    popup_mark_visible, popup_set_enabled, popup_translate, start_popup_monitor,
+    stop_popup_monitor,
 };
 
 // Fetch the current popup text (called by Popup window on mount to avoid
@@ -621,6 +736,12 @@ pub fn stop_popup_monitor() {}
 #[cfg(not(target_os = "windows"))]
 pub fn popup_get_foreground_process() -> String {
     String::new()
+}
+// Window enumeration is a Windows-only feature; other platforms get an empty
+// picker rather than an IPC error.
+#[cfg(not(target_os = "windows"))]
+pub fn popup_list_applications() -> Vec<PopupApp> {
+    Vec::new()
 }
 #[cfg(not(target_os = "windows"))]
 pub fn popup_set_enabled(_enabled: bool) {}

@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api';
+import { open } from '@tauri-apps/api/dialog';
 import toast, { Toaster } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import {
@@ -7,13 +8,17 @@ import {
     CardBody,
     Chip,
     Input,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
     Radio,
     RadioGroup,
     Slider,
+    Spinner,
     Switch,
 } from '@nextui-org/react';
-import { MdAdd, MdApps } from 'react-icons/md';
-import React, { useEffect, useState } from 'react';
+import { MdAdd, MdApps, MdFolderOpen, MdRefresh, MdSearch } from 'react-icons/md';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useConfig } from '../../../../hooks/useConfig';
 import { useToastStyle } from '../../../../hooks';
@@ -30,6 +35,36 @@ export default function SelectionPopup() {
     const [popupFadeDistance, setPopupFadeDistance] = useConfig('popup_fade_distance', 140);
     const [newProcess, setNewProcess] = useState('');
     const [foregroundProcess, setForegroundProcess] = useState('');
+    // Application picker: the list is read from Rust (visible top-level windows
+    // -> owning exe name), refreshed every time the popover opens so apps
+    // launched after the settings page was opened still show up.
+    const [apps, setApps] = useState([]);
+    const [appsLoading, setAppsLoading] = useState(false);
+    const [pickerOpen, setPickerOpen] = useState(false);
+    const [appSearch, setAppSearch] = useState('');
+    // Guards against a slow refresh overwriting a newer one's result.
+    const appsReqId = useRef(0);
+
+    const loadApps = useCallback(() => {
+        const id = ++appsReqId.current;
+        setAppsLoading(true);
+        invoke('popup_list_applications')
+            .then((list) => {
+                if (id === appsReqId.current) {
+                    setApps(Array.isArray(list) ? list : []);
+                }
+            })
+            .catch(() => {
+                if (id === appsReqId.current) {
+                    setApps([]);
+                }
+            })
+            .finally(() => {
+                if (id === appsReqId.current) {
+                    setAppsLoading(false);
+                }
+            });
+    }, []);
 
     useEffect(() => {
         if (popupEnabled) {
@@ -39,6 +74,33 @@ export default function SelectionPopup() {
         }
     }, [popupEnabled]);
 
+    // Refresh on every open: the user may have launched the app they want to
+    // pick after this settings page was already loaded.
+    useEffect(() => {
+        if (pickerOpen) {
+            loadApps();
+        } else {
+            setAppSearch('');
+        }
+    }, [pickerOpen, loadApps]);
+
+    // The exe names are compared case-insensitively so the picker and the Rust
+    // monitor agree on what counts as "already in the list".
+    const addedSet = useMemo(
+        () => new Set((processList || []).map((p) => p.toLowerCase())),
+        [processList]
+    );
+
+    const filteredApps = useMemo(() => {
+        const q = appSearch.trim().toLowerCase();
+        if (!q) return apps;
+        return apps.filter(
+            (a) =>
+                (a.process || '').toLowerCase().includes(q) ||
+                (a.title || '').toLowerCase().includes(q)
+        );
+    }, [apps, appSearch]);
+
     async function handleEnable(v) {
         setPopupEnabled(v);
         await invoke('popup_set_enabled', { enabled: v });
@@ -47,15 +109,65 @@ export default function SelectionPopup() {
         }
     }
 
+    // The popup monitor matches on the executable name, so a full path picked
+    // from the file manager is reduced to its basename (and lowercased, to match
+    // the Rust-side comparison).
+    function baseName(path) {
+        return String(path || '')
+            .split(/[\\/]/)
+            .pop()
+            .trim();
+    }
+
+    // Adds one or more exe names in a single state write. useConfig's setter has
+    // no functional-update form, so batching here (instead of looping over
+    // addProcess) is what keeps a multi-file selection from collapsing to the
+    // last entry.
+    function addProcesses(names) {
+        const toAdd = (names || [])
+            .map((n) => (n || '').trim().toLowerCase())
+            .filter(Boolean);
+        if (toAdd.length === 0) return;
+        const current = processList || [];
+        const merged = [...current];
+        toAdd.forEach((n) => {
+            if (!merged.includes(n)) merged.push(n);
+        });
+        if (merged.length !== current.length) {
+            setProcessList(merged);
+        }
+    }
+
     function addProcess(name) {
-        const trimmed = name.trim().toLowerCase();
-        if (!trimmed) return;
-        if (processList && processList.includes(trimmed)) return;
-        setProcessList([...(processList || []), trimmed]);
+        addProcesses([name]);
     }
 
     function removeProcess(name) {
         setProcessList((processList || []).filter((p) => p !== name));
+    }
+
+    // Pick executables straight from the file manager. The running-app list above
+    // only covers apps that currently own a visible window, so this is the way to
+    // add something not running yet, a portable exe, or a Start Menu shortcut's
+    // target.
+    async function pickExeFile() {
+        try {
+            const selected = await open({
+                multiple: true,
+                directory: false,
+                filters: [
+                    {
+                        name: '*.exe',
+                        extensions: ['exe'],
+                    },
+                ],
+            });
+            if (!selected) return;
+            const paths = Array.isArray(selected) ? selected : [selected];
+            addProcesses(paths.map(baseName));
+        } catch (e) {
+            toast.error(e.toString(), { style: toastStyle });
+        }
     }
 
     return (
@@ -99,6 +211,118 @@ export default function SelectionPopup() {
             {popupEnabled ? (
                 <Card className='mb-[10px]'>
                     <CardBody className='p-[10px]'>
+                        <div className='flex items-center gap-[5px] mb-[10px]'>
+                            <Popover
+                                placement='bottom-start'
+                                offset={8}
+                                isOpen={pickerOpen}
+                                onOpenChange={setPickerOpen}
+                            >
+                                <PopoverTrigger>
+                                    {/* No onPress here: PopoverTrigger already toggles
+                                        the popover on press, so adding our own would
+                                        fire twice and cancel itself out. */}
+                                    <Button
+                                        size='sm'
+                                        color='primary'
+                                        variant='flat'
+                                        startContent={<MdApps className='text-[16px]' />}
+                                    >
+                                        {t('popup.select_app')}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className='p-[10px] w-[360px]'>
+                                    <div className='w-full'>
+                                        <div className='flex items-center gap-[5px]'>
+                                            <Input
+                                                size='sm'
+                                                autoFocus
+                                                isClearable
+                                                onClear={() => {
+                                                    setAppSearch('');
+                                                }}
+                                                placeholder={t('popup.select_app_search')}
+                                                startContent={
+                                                    <MdSearch className='text-[16px] text-default-400 shrink-0' />
+                                                }
+                                                value={appSearch}
+                                                onValueChange={setAppSearch}
+                                            />
+                                            <Button
+                                                size='sm'
+                                                isIconOnly
+                                                variant='flat'
+                                                title={t('popup.select_app_refresh')}
+                                                onPress={() => {
+                                                    loadApps();
+                                                }}
+                                            >
+                                                <MdRefresh className='text-[16px]' />
+                                            </Button>
+                                        </div>
+                                        <div className='mt-[8px] max-h-[260px] overflow-y-auto overscroll-contain'>
+                                            {appsLoading ? (
+                                                <div className='flex justify-center py-[20px]'>
+                                                    <Spinner size='sm' />
+                                                </div>
+                                            ) : filteredApps.length === 0 ? (
+                                                <p className='text-sm text-default-500 text-center py-[20px]'>
+                                                    {t('popup.select_app_empty')}
+                                                </p>
+                                            ) : (
+                                                filteredApps.map((app) => {
+                                                    const added = addedSet.has(
+                                                        (app.process || '').toLowerCase()
+                                                    );
+                                                    return (
+                                                        <button
+                                                            key={app.process}
+                                                            type='button'
+                                                            disabled={added}
+                                                            onClick={() => {
+                                                                addProcess(app.process);
+                                                            }}
+                                                            className={`w-full text-left px-[8px] py-[6px] rounded-[6px] flex items-center justify-between gap-[8px] ${
+                                                                added
+                                                                    ? 'opacity-40 cursor-default'
+                                                                    : 'hover:bg-default-100 cursor-pointer'
+                                                            }`}
+                                                        >
+                                                            <span className='min-w-0'>
+                                                                <span className='block text-sm truncate'>
+                                                                    {app.process}
+                                                                </span>
+                                                                {app.title ? (
+                                                                    <span className='block text-xs text-default-400 truncate'>
+                                                                        {app.title}
+                                                                    </span>
+                                                                ) : null}
+                                                            </span>
+                                                            {added ? (
+                                                                <span className='text-xs text-default-400 shrink-0'>
+                                                                    {t('popup.select_app_added')}
+                                                                </span>
+                                                            ) : null}
+                                                        </button>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                            <Button
+                                size='sm'
+                                variant='flat'
+                                color='primary'
+                                startContent={<MdFolderOpen className='text-[16px]' />}
+                                onPress={() => {
+                                    pickExeFile();
+                                }}
+                            >
+                                {t('popup.select_app_browse')}
+                            </Button>
+                        </div>
                         <div className='flex items-center gap-[5px] mb-[10px]'>
                             <Input
                                 size='sm'

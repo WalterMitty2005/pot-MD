@@ -1,24 +1,58 @@
-import { Code, Card, CardBody, Button, Progress, Skeleton } from '@nextui-org/react';
-import { checkUpdate, installUpdate } from '@tauri-apps/api/updater';
+import { Card, CardBody, Button, Chip, Code, Skeleton } from '@nextui-org/react';
+import { fetch } from '@tauri-apps/api/http';
 import React, { useEffect, useState } from 'react';
 import { appWindow } from '@tauri-apps/api/window';
-import { relaunch } from '@tauri-apps/api/process';
+import { open } from '@tauri-apps/api/shell';
 import toast, { Toaster } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { listen } from '@tauri-apps/api/event';
 import ReactMarkdown from 'react-markdown';
 
 import { useConfig, useToastStyle } from '../../hooks';
-import { osType } from '../../utils/env';
+import { appVersion, osType } from '../../utils/env';
 
-let unlisten = 0;
-let eventId = 0;
+// pot-MD ships from its own repository, so "check update" must read that
+// repo's releases. The previous implementation used Tauri's built-in updater
+// (checkUpdate/installUpdate), whose endpoint still points at upstream
+// pot-app/pot-desktop AND whose manifest signature is made with upstream's
+// private key -- so it could never describe, let alone install, a pot-MD
+// build. Reading the GitHub Releases API instead gives us the real latest
+// version + changelog; the actual download is handed to the browser.
+const REPO = 'WalterMitty2005/pot-MD';
+const RELEASES_API = `https://api.github.com/repos/${REPO}/releases`;
+const RELEASES_PAGE = `https://github.com/${REPO}/releases`;
+
+// Split a tag into its numeric components so `1.0.10` > `1.0.9` (a plain
+// string compare would get that backwards). Non-numeric chunks (e.g. the "MD"
+// in "3.0.7-MD.8") are dropped rather than making the whole thing unparsable.
+function parseVersion(v) {
+    return String(v || '')
+        .replace(/^v/i, '')
+        .split(/[.\-+_]/)
+        .filter((s) => /^\d+$/.test(s))
+        .map((s) => parseInt(s, 10));
+}
+
+function isNewer(latest, current) {
+    const a = parseVersion(latest);
+    const b = parseVersion(current);
+    const n = Math.max(a.length, b.length);
+    for (let i = 0; i < n; i++) {
+        const x = a[i] ?? 0;
+        const y = b[i] ?? 0;
+        if (x !== y) return x > y;
+    }
+    // Identical numeric core (or neither side carried digits at all): fall back
+    // to a string compare so a suffix-only bump still counts as an update.
+    const norm = (s) => String(s || '').replace(/^v/i, '');
+    return norm(latest) !== norm(current);
+}
 
 export default function Updater() {
     const [transparent] = useConfig('transparent', true);
-    const [downloaded, setDownloaded] = useState(0);
-    const [total, setTotal] = useState(0);
     const [body, setBody] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [latest, setLatest] = useState('');
+    const [downloadUrl, setDownloadUrl] = useState('');
     const { t } = useTranslation();
     const toastStyle = useToastStyle();
 
@@ -26,33 +60,61 @@ export default function Updater() {
         if (appWindow.label === 'updater') {
             appWindow.show();
         }
-        checkUpdate().then(
-            (update) => {
-                if (update.shouldUpdate) {
-                    setBody(update.manifest.body);
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await fetch(RELEASES_API, {
+                    method: 'GET',
+                    headers: {
+                        Accept: 'application/vnd.github+json',
+                        'User-Agent': 'pot-MD',
+                    },
+                });
+                if (!res.ok) {
+                    throw new Error(`GitHub API ${res.status}`);
+                }
+                const list = Array.isArray(res.data) ? res.data : [];
+                // Prefer the newest full release; this fork's builds have been
+                // published as pre-releases, so fall back to those rather than
+                // reporting "no releases" forever.
+                const release =
+                    list.find((r) => !r.draft && !r.prerelease) ||
+                    list.find((r) => !r.draft) ||
+                    null;
+                if (!release) {
+                    throw new Error(t('updater.no_release'));
+                }
+                if (cancelled) return;
+
+                const tag = release.tag_name || release.name || '';
+                const asset = (release.assets || []).find((a) =>
+                    /x64-setup\.exe$/i.test(a.name || '')
+                );
+                setLatest(tag);
+                setDownloadUrl(
+                    asset && asset.browser_download_url ? asset.browser_download_url : release.html_url
+                );
+
+                const notes = release.body || '';
+                if (isNewer(tag, appVersion)) {
+                    setBody(notes || t('updater.no_notes'));
                 } else {
-                    setBody(t('updater.latest'));
+                    setBody(`${t('updater.latest')}\n\n${notes}`);
                 }
-            },
-            (e) => {
-                setBody(e.toString());
+            } catch (e) {
+                if (cancelled) return;
+                setBody(`### ${t('updater.failed')}\n\n\`${e.toString()}\``);
                 toast.error(e.toString(), { style: toastStyle });
+            } finally {
+                if (!cancelled) setLoading(false);
             }
-        );
-        if (unlisten === 0) {
-            unlisten = listen('tauri://update-download-progress', (e) => {
-                if (eventId === 0) {
-                    eventId = e.id;
-                }
-                if (e.id === eventId) {
-                    setTotal(e.payload.contentLength);
-                    setDownloaded((a) => {
-                        return a + e.payload.chunkLength;
-                    });
-                }
-            });
-        }
+        })();
+        return () => {
+            cancelled = true;
+        };
     }, []);
+
+    const hasUpdate = latest !== '' && isNewer(latest, appVersion);
 
     return (
         <div
@@ -74,9 +136,24 @@ export default function Updater() {
                     <h2>{t('updater.title')}</h2>
                 </div>
             </div>
-            <Card className='mx-[80px] mt-[10px] overscroll-auto h-[calc(100vh-150px)]'>
+            <div className='flex items-center justify-center gap-[10px] mx-[80px] mt-[10px] flex-wrap'>
+                <Chip
+                    size='sm'
+                    variant='flat'
+                >
+                    {t('updater.current_version')}: {appVersion || '-'}
+                </Chip>
+                <Chip
+                    size='sm'
+                    variant='flat'
+                    color={hasUpdate ? 'success' : 'default'}
+                >
+                    {t('updater.latest_version')}: {latest || (loading ? '…' : '-')}
+                </Chip>
+            </div>
+            <Card className='mx-[80px] mt-[10px] overscroll-auto h-[calc(100vh-190px)]'>
                 <CardBody>
-                    {body === '' ? (
+                    {loading ? (
                         <div className='space-y-3'>
                             <Skeleton className='w-3/5 rounded-lg'>
                                 <div className='h-3 w-3/5 rounded-lg bg-default-200'></div>
@@ -132,46 +209,17 @@ export default function Updater() {
                     )}
                 </CardBody>
             </Card>
-            {downloaded !== 0 && (
-                <Progress
-                    aria-label='Downloading...'
-                    label={t('updater.progress')}
-                    value={(downloaded / total) * 100}
-                    classNames={{
-                        base: 'w-full px-[80px]',
-                        track: 'drop-shadow-md border border-default',
-                        indicator: 'bg-gradient-to-r from-pink-500 to-yellow-500',
-                        label: 'tracking-wider font-medium text-default-600',
-                        value: 'text-foreground/60',
-                    }}
-                    showValueLabel
-                    size='sm'
-                />
-            )}
 
             <div className='grid gap-4 grid-cols-2 h-[50px] my-[10px] mx-[80px]'>
                 <Button
                     variant='flat'
-                    isLoading={downloaded !== 0}
-                    isDisabled={downloaded !== 0}
                     color='primary'
+                    isDisabled={loading}
                     onPress={() => {
-                        installUpdate().then(
-                            () => {
-                                toast.success(t('updater.installed'), { style: toastStyle, duration: 10000 });
-                                relaunch();
-                            },
-                            (e) => {
-                                toast.error(e.toString(), { style: toastStyle });
-                            }
-                        );
+                        open(downloadUrl || RELEASES_PAGE);
                     }}
                 >
-                    {downloaded !== 0
-                        ? downloaded > total
-                            ? t('updater.installing')
-                            : t('updater.downloading')
-                        : t('updater.update')}
+                    {hasUpdate ? t('updater.download') : t('updater.open_release')}
                 </Button>
                 <Button
                     variant='flat'

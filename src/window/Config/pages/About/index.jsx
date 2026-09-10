@@ -1,14 +1,20 @@
-import { Divider, Button, Popover, PopoverTrigger, PopoverContent, Tooltip } from '@nextui-org/react';
+import { Divider, Button } from '@nextui-org/react';
 import { appLogDir, appConfigDir } from '@tauri-apps/api/path';
 import { useTranslation } from 'react-i18next';
 import { open } from '@tauri-apps/api/shell';
-import { BsTencentQq } from 'react-icons/bs';
-import { BsTelegram } from 'react-icons/bs';
-import { BsGithub } from 'react-icons/bs';
 import { invoke } from '@tauri-apps/api';
 import React from 'react';
 
 import { appVersion } from '../../../../utils/env';
+
+// Single source of truth for the fork's own pages. pot-MD lives in its own
+// repository, so GitHub / issue links must point there instead of upstream
+// pot-app/pot-desktop (otherwise bug reports land on the wrong project).
+const REPO_URL = 'https://github.com/WalterMitty2005/pot-MD';
+const ISSUES_URL = `${REPO_URL}/issues`;
+// Upstream's official site: kept as a reference link, relabelled so users do
+// not mistake it for this fork's site.
+const UPSTREAM_SITE_URL = 'https://pot-app.com';
 
 export default function About() {
     const { t } = useTranslation();
@@ -24,13 +30,13 @@ export default function About() {
                 <h1 className='font-bold text-2xl text-center'>pot-MD</h1>
                 <p className='text-center text-sm text-gray-500 mb-[5px]'>{appVersion}</p>
                 <Divider />
-                <div className='flex justify-between'>
+                <div className='flex justify-center gap-[20px]'>
                     <Button
                         variant='light'
                         className='my-[5px]'
                         size='sm'
                         onPress={() => {
-                            open('https://pot-app.com');
+                            open(UPSTREAM_SITE_URL);
                         }}
                     >
                         {t('config.about.website')}
@@ -40,120 +46,21 @@ export default function About() {
                         className='my-[5px]'
                         size='sm'
                         onPress={() => {
-                            open('https://github.com/pot-app/pot-desktop');
+                            open(REPO_URL);
                         }}
                     >
                         {t('config.about.github')}
                     </Button>
-                    <Popover
-                        placement='top'
-                        offset={10}
+                    <Button
+                        variant='light'
+                        className='my-[5px]'
+                        size='sm'
+                        onPress={() => {
+                            open(ISSUES_URL);
+                        }}
                     >
-                        <PopoverTrigger>
-                            <Button
-                                variant='light'
-                                className='my-[5px]'
-                                size='sm'
-                            >
-                                {t('config.about.feedback')}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent>
-                            <div className='flex justify-between'>
-                                <Button
-                                    variant='light'
-                                    className='my-[5px]'
-                                    size='sm'
-                                    onPress={() => {
-                                        open('https://github.com/pot-app/pot-desktop/issues');
-                                    }}
-                                >
-                                    {t('config.about.issue')}
-                                </Button>
-                                <Button
-                                    variant='light'
-                                    className='my-[5px]'
-                                    size='sm'
-                                    onPress={() => {
-                                        open('mailto:support@pot-app.com');
-                                    }}
-                                >
-                                    {t('config.about.email')}
-                                </Button>
-                            </div>
-                        </PopoverContent>
-                    </Popover>
-
-                    <Popover
-                        placement='top'
-                        offset={10}
-                    >
-                        <PopoverTrigger>
-                            <Button
-                                variant='light'
-                                className='my-[5px]'
-                                size='sm'
-                            >
-                                {t('config.about.community')}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent>
-                            <div className='flex justify-between'>
-                                <Tooltip content={t('config.about.qq_channel')}>
-                                    <Button
-                                        isIconOnly
-                                        variant='light'
-                                        className='my-[5px]'
-                                        size='lg'
-                                        onPress={() => {
-                                            open('https://pd.qq.com/s/akns94e1r');
-                                        }}
-                                    >
-                                        <BsTencentQq />
-                                    </Button>
-                                </Tooltip>
-                                <Tooltip content={t('config.about.qq_group')}>
-                                    <Button
-                                        isIconOnly
-                                        variant='light'
-                                        className='my-[5px]'
-                                        size='lg'
-                                        onPress={() => {
-                                            open('https://pot-app.com/img/qq_group.png');
-                                        }}
-                                    >
-                                        <BsTencentQq />
-                                    </Button>
-                                </Tooltip>
-                                <Tooltip content={t('config.about.telegram')}>
-                                    <Button
-                                        isIconOnly
-                                        variant='light'
-                                        className='my-[5px]'
-                                        size='lg'
-                                        onPress={() => {
-                                            open('https://t.me/pot_app');
-                                        }}
-                                    >
-                                        <BsTelegram />
-                                    </Button>
-                                </Tooltip>
-                                <Tooltip content={t('config.about.discussion')}>
-                                    <Button
-                                        isIconOnly
-                                        variant='light'
-                                        className='my-[5px]'
-                                        size='lg'
-                                        onPress={() => {
-                                            open('https://github.com/pot-app/pot-desktop/discussions');
-                                        }}
-                                    >
-                                        <BsGithub />
-                                    </Button>
-                                </Tooltip>
-                            </div>
-                        </PopoverContent>
-                    </Popover>
+                        {t('config.about.feedback')}
+                    </Button>
                 </div>
                 <Divider />
             </div>

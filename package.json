@@ -1,7 +1,7 @@
 {
     "name": "pot-md",
     "private": true,
-    "version": "3.0.7-MD.8",
+    "version": "1.0.0",
     "type": "module",
     "scripts": {
         "dev": "vite",
