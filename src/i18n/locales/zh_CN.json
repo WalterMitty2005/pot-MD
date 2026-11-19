@@ -7,7 +7,8 @@
             "write_clipboard": "写入剪贴板",
             "plugin": "插件",
             "coming": "敬请期待…",
-            "clear": "清空"
+            "clear": "清空",
+            "copy_success": "已复制"
         },
         "languages": {
             "auto": "自动检测",
@@ -155,7 +156,8 @@
                 "ocr_translate": "截图翻译",
                 "is_register": "快捷键已被注册",
                 "success": "快捷键注册成功",
-                "set_hotkey": "按下按键设置快捷键"
+                "set_hotkey": "按下按键设置快捷键",
+                "ask_ai": "AI 问答"
             },
             "service": {
                 "label": "服务设置",
@@ -220,6 +222,14 @@
             "selection_popup": {
                 "label": "划词弹窗",
                 "title": "划词弹窗"
+            },
+            "ask": {
+                "label": "AI 问答",
+                "title": "AI 问答",
+                "service_instance": "回答服务",
+                "auto_instance": "自动（列表首个 AI 服务）",
+                "service_instance_desc": "问答复用翻译服务的接口与密钥，但不发送翻译提示词，直接把问题交给模型。仅支持 OpenAI、Ollama、ChatGLM、GeminiPro 等对话类服务。",
+                "markdown_render": "渲染 Markdown 格式"
             }
         },
         "updater": {
@@ -513,6 +523,19 @@
             "select_app_added": "已添加",
             "select_app_refresh": "刷新应用列表",
             "select_app_browse": "浏览 exe 文件…"
+        },
+        "ask": {
+            "title": "AI 问答",
+            "placeholder": "输入问题，Enter 发送，Shift+Enter 换行",
+            "send": "发送",
+            "clear": "清空",
+            "copy": "复制回答",
+            "no_service": "未配置可用的 AI 服务，请先在「服务」中添加 OpenAI / Ollama / ChatGLM / GeminiPro",
+            "markdown_on": "切换为 Markdown 渲染",
+            "markdown_off": "切换为纯文本显示",
+            "no_service_short": "未配置",
+            "switch_model": "切换模型",
+            "switch_model_tip": "点击切换回答模型"
         }
     }
 }

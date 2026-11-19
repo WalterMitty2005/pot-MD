@@ -7,7 +7,8 @@
             "write_clipboard": "寫入剪貼簿",
             "plugin": "外掛程式",
             "coming": "即將推出…",
-            "clear": "清除"
+            "clear": "清除",
+            "copy_success": "已複製"
         },
         "languages": {
             "auto": "自動偵測",
@@ -155,7 +156,8 @@
                 "ocr_translate": "截圖翻譯",
                 "is_register": "該快速鍵已被註冊",
                 "success": "快速鍵註冊成功",
-                "set_hotkey": "按下設定快速鍵"
+                "set_hotkey": "按下設定快速鍵",
+                "ask_ai": "AI 問答"
             },
             "service": {
                 "label": "服務設定",
@@ -216,6 +218,14 @@
                 "qq_group": "QQ 群組",
                 "telegram": "Telegram",
                 "discussion": "Github 討論區"
+            },
+            "ask": {
+                "label": "AI 問答",
+                "title": "AI 問答",
+                "service_instance": "回答服務",
+                "auto_instance": "自動（清單首個 AI 服務）",
+                "service_instance_desc": "問答沿用翻譯服務的介面與金鑰，但不送出翻譯提示詞，直接將問題交給模型。僅支援 OpenAI、Ollama、ChatGLM、GeminiPro 等對話類服務。",
+                "markdown_render": "呈現 Markdown 格式"
             }
         },
         "updater": {
@@ -506,6 +516,19 @@
             "select_app_added": "已新增",
             "select_app_refresh": "重新整理應用程式清單",
             "select_app_browse": "瀏覽 exe 檔案…"
+        },
+        "ask": {
+            "title": "AI 問答",
+            "placeholder": "輸入問題，Enter 送出，Shift+Enter 換行",
+            "send": "送出",
+            "clear": "清除",
+            "copy": "複製回答",
+            "no_service": "尚未設定可用的 AI 服務，請先在「服務」中新增 OpenAI / Ollama / ChatGLM / GeminiPro",
+            "markdown_on": "切換為 Markdown 呈現",
+            "markdown_off": "切換為純文字顯示",
+            "no_service_short": "未設定",
+            "switch_model": "切換模型",
+            "switch_model_tip": "點擊切換回答模型"
         }
     }
 }

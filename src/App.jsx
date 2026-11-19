@@ -11,6 +11,7 @@ import Translate from './window/Translate';
 import Recognize from './window/Recognize';
 import Updater from './window/Updater';
 import Popup from './window/Popup';
+import Ask from './window/Ask';
 import { store } from './utils/store';
 import Config from './window/Config';
 import { useConfig } from './hooks';
@@ -24,6 +25,7 @@ const windowMap = {
     config: <Config />,
     updater: <Updater />,
     popup: <Popup />,
+    ask: <Ask />,
 };
 
 export default function App() {

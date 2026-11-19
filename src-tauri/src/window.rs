@@ -387,7 +387,82 @@ pub fn text_translate(text: String) {
     window.emit("new_text", text).unwrap();
 }
 
+pub fn ask_window() {
+    // AI Q&A: a standalone window (label "ask") rather than a mode of the
+    // translate window. It shares none of the translate UI state -- no
+    // language pair, no service cards -- so reusing "translate" would mean
+    // bolting a third mode onto an already tri-modal page. The conversation
+    // itself lives in the config store (frontend side), not here.
+    let (window, exists) = build_window("ask", "Ask AI");
+    window.set_skip_taskbar(true).unwrap();
+
+    if exists {
+        // Already open (hotkey pressed again): keep the conversation and just
+        // bring the window back to the front.
+        let _ = window.show();
+        let _ = window.set_focus();
+        let _ = window.emit("ask_reset", ());
+        return;
+    }
+
+    let width = match get("ask_window_width") {
+        Some(v) => v.as_i64().unwrap(),
+        None => {
+            set("ask_window_width", 420);
+            420
+        }
+    };
+    let height = match get("ask_window_height") {
+        Some(v) => v.as_i64().unwrap(),
+        None => {
+            set("ask_window_height", 300);
+            300
+        }
+    };
+
+    let monitor = window.current_monitor().unwrap().unwrap();
+    let dpi = monitor.scale_factor();
+    window
+        .set_size(tauri::PhysicalSize::new(
+            (width as f64) * dpi,
+            (height as f64) * dpi,
+        ))
+        .unwrap();
+
+    // Restore where the window was left. Coordinates are stored as logical
+    // pixels (the frontend divides by the scale factor), so re-apply the
+    // current DPI. Only restore when the point still lands on a connected
+    // monitor: a position saved on an unplugged second display would put the
+    // window somewhere unreachable.
+    let saved_x = get("ask_window_position_x").and_then(|v| v.as_i64());
+    let saved_y = get("ask_window_position_y").and_then(|v| v.as_i64());
+    let mut restored = false;
+    if let (Some(x), Some(y)) = (saved_x, saved_y) {
+        let px = (x as f64 * dpi) as i32;
+        let py = (y as f64 * dpi) as i32;
+        let target = get_current_monitor(px, py);
+        let monitor_position = target.position();
+        let monitor_size = target.size();
+        let visible = px >= monitor_position.x
+            && py >= monitor_position.y
+            && px < monitor_position.x + monitor_size.width as i32
+            && py < monitor_position.y + monitor_size.height as i32;
+        if visible {
+            restored = window
+                .set_position(tauri::PhysicalPosition::new(px, py))
+                .is_ok();
+        }
+    }
+    if !restored {
+        // First run (or the saved spot is gone): centre on the current monitor.
+        let _ = window.center();
+    }
+
+    let _ = window.show();
+}
+
 pub fn image_translate() {
+
     let app_handle = APP.get().unwrap();
     let state: tauri::State<StringWrapper> = app_handle.state();
     state

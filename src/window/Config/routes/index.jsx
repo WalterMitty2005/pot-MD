@@ -9,6 +9,7 @@ import Hotkey from '../pages/Hotkey';
 import Backup from '../pages/Backup';
 import About from '../pages/About';
 import SelectionPopup from '../pages/SelectionPopup';
+import Ask from '../pages/Ask';
 
 const routes = [
     {
@@ -30,6 +31,10 @@ const routes = [
     {
         path: '/selection_popup',
         element: <SelectionPopup />,
+    },
+    {
+        path: '/ask',
+        element: <Ask />,
     },
     {
         path: '/service',

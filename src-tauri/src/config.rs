@@ -37,6 +37,7 @@ pub fn init_config(app: &mut tauri::App) {
             ("hotkey_input_translate", "Alt+D"),
             ("hotkey_ocr_recognize", "Alt+Q"),
             ("hotkey_ocr_translate", "Alt+S"),
+            ("hotkey_ask_ai", "Alt+W"),
         ];
         for (k, v) in default_hotkeys.iter() {
             if store.get(k).is_none() {

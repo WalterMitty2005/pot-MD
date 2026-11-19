@@ -7,7 +7,8 @@
             "write_clipboard": "Write to Clipboard",
             "plugin": "Plugin",
             "coming": "Coming soon…",
-            "clear": "Clear"
+            "clear": "Clear",
+            "copy_success": "Copied"
         },
         "languages": {
             "auto": "Auto Detect",
@@ -155,7 +156,8 @@
                 "ocr_translate": "Screenshot Translation",
                 "is_register": "The hotkey is already registered",
                 "success": "Hotkey register success",
-                "set_hotkey": "Press to Set Hotkey"
+                "set_hotkey": "Press to Set Hotkey",
+                "ask_ai": "Ask AI"
             },
             "service": {
                 "label": "Service",
@@ -220,6 +222,14 @@
             "selection_popup": {
                 "label": "Selection Popup",
                 "title": "Selection Popup"
+            },
+            "ask": {
+                "label": "Ask AI",
+                "title": "Ask AI",
+                "service_instance": "Answer service",
+                "auto_instance": "Auto (first AI service in the list)",
+                "service_instance_desc": "Q&A reuses the endpoint and key of a translation service, but sends no translation prompt — the question goes straight to the model. Only chat-style services (OpenAI, Ollama, ChatGLM, GeminiPro) are supported.",
+                "markdown_render": "Render Markdown"
             }
         },
         "updater": {
@@ -513,6 +523,19 @@
             "select_app_added": "Added",
             "select_app_refresh": "Refresh application list",
             "select_app_browse": "Browse .exe…"
+        },
+        "ask": {
+            "title": "Ask AI",
+            "placeholder": "Ask a question. Enter to send, Shift+Enter for a new line",
+            "send": "Send",
+            "clear": "Clear",
+            "copy": "Copy answer",
+            "no_service": "No AI service configured. Add OpenAI / Ollama / ChatGLM / GeminiPro under Services first.",
+            "markdown_on": "Switch to Markdown rendering",
+            "markdown_off": "Switch to plain text",
+            "no_service_short": "Not configured",
+            "switch_model": "Switch model",
+            "switch_model_tip": "Click to switch the answering model"
         }
     }
 }

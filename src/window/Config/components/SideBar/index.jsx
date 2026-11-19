@@ -9,6 +9,7 @@ import { MdExtension } from 'react-icons/md';
 import { AiFillCloud } from 'react-icons/ai';
 import { FaHistory } from 'react-icons/fa';
 import { MdOutlineAdsClick } from 'react-icons/md';
+import { TbMessageChatbot } from 'react-icons/tb';
 import { Button } from '@nextui-org/react';
 import React from 'react';
 
@@ -82,6 +83,18 @@ export default function SideBar() {
                 startContent={<MdOutlineAdsClick className='text-[24px]' />}
             >
                 <div className='w-full'>{t('config.selection_popup.label')}</div>
+            </Button>
+            <Button
+                fullWidth
+                size='lg'
+                variant={setStyle('/ask')}
+                className='mb-[5px]'
+                onPress={() => {
+                    navigate('/ask');
+                }}
+                startContent={<TbMessageChatbot className='text-[24px]' />}
+            >
+                <div className='w-full'>{t('config.ask.label')}</div>
             </Button>
             <Button
                 fullWidth
